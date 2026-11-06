@@ -9,7 +9,7 @@ import { Track, EGG_R, tissueTexture } from './track.js';
 import { Race, Racer, DIFFICULTY, BASE_SPEED, makeBotName } from './race.js';
 import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag } from './assets.js';
 import { Sound } from './audio.js';
-import { LANGS, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang, detectLang } from './i18n.js';
+import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -988,7 +988,7 @@ function tickToast(dt) {
 // Wybór języka: pierwszy ekran przy pierwszej wizycie, później dostępny z menu.
 function setupLanguage(game) {
   const saved = savedLang();
-  setLang(saved || detectLang(), { remember: false });
+  setLang(saved || DEFAULT_LANG, { remember: false });
   const list = $('langList');
   for (const { code, name } of LANGS) {
     const b = document.createElement('button');

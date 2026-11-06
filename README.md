@@ -14,7 +14,7 @@ Potem otwórz http://localhost:8123. Modele są wbudowane w `dist/game.js`, wię
 
 ## Języki
 
-Gra działa po czesku, włosku, niemiecku, angielsku, polsku, słowacku i rosyjsku. Przy pierwszej wizycie zaczyna się od wyboru języka, a później można go zmienić w menu. Tłumaczenia są w `src/i18n.js`.
+Gra działa po czesku, włosku, niemiecku, angielsku, polsku, słowacku i rosyjsku. Domyślny jest angielski. Przy pierwszej wizycie gra zaczyna się od wyboru języka, a później można go zmienić w menu. Tłumaczenia są w `src/i18n.js`.
 
 ## Praca nad kodem
 

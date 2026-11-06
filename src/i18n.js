@@ -330,7 +330,9 @@ export const STRINGS = {
 export const FACT_COUNT = 6;
 const STORE_KEY = 'jzm-lang';
 
-let current = 'en';
+export const DEFAULT_LANG = 'en';
+
+let current = DEFAULT_LANG;
 
 function isLang(code) {
   return Object.prototype.hasOwnProperty.call(STRINGS, code);
@@ -354,15 +356,6 @@ export function savedLang() {
   }
 }
 
-export function detectLang() {
-  const wanted = navigator.languages?.length ? navigator.languages : [navigator.language || 'en'];
-  for (const tag of wanted) {
-    const code = String(tag).slice(0, 2).toLowerCase();
-    if (isLang(code)) return code;
-  }
-  return 'en';
-}
-
 export function t(key, params) {
   const text = STRINGS[current][key] ?? STRINGS.en[key] ?? key;
   if (!params) return text;
@@ -375,7 +368,7 @@ export function decimal(value) {
 
 // Ustawia język i przepisuje napisy ze strony (data-i18n, data-i18n-title, data-i18n-aria).
 export function setLang(code, { remember = true } = {}) {
-  current = isLang(code) ? code : 'en';
+  current = isLang(code) ? code : DEFAULT_LANG;
   if (remember) {
     try { localStorage.setItem(STORE_KEY, current); } catch { /* język zostaje tylko na tę wizytę */ }
   }
