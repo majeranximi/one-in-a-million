@@ -1,0 +1,19 @@
+{
+  "name": "jeden-z-milionow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "models": "node tools/convert-models.mjs",
+    "build": "node tools/build.mjs",
+    "sim": "node tools/sim.mjs",
+    "deploy": "bash tools/deploy.sh",
+    "start": "python3 -m http.server 8123 --bind 127.0.0.1 --directory dist"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.1.1",
+    "@gltf-transform/functions": "^4.1.1",
+    "esbuild": "^0.24.2",
+    "meshoptimizer": "^0.22.0",
+    "three": "^0.170.0"
+  }
+}
