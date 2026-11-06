@@ -17,9 +17,9 @@ const BOT_NAMES = [
 ];
 
 export const DIFFICULTY = {
-  easy: { label: 'Łatwy', skill: [0.8, 0.88], error: 2.2, boostUse: 0.45, help: 1 },
-  normal: { label: 'Normalny', skill: [0.88, 0.95], error: 1.2, boostUse: 0.7, help: 0.5 },
-  hard: { label: 'Trudny', skill: [0.96, 1.02], error: 0.5, boostUse: 0.95, help: 0 },
+  easy: { skill: [0.8, 0.88], error: 2.2, boostUse: 0.45, help: 1 },
+  normal: { skill: [0.88, 0.95], error: 1.2, boostUse: 0.7, help: 0.5 },
+  hard: { skill: [0.96, 1.02], error: 0.5, boostUse: 0.95, help: 0 },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));

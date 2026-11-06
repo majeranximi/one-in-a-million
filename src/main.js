@@ -9,21 +9,13 @@ import { Track, EGG_R, tissueTexture } from './track.js';
 import { Race, Racer, DIFFICULTY, BASE_SPEED, makeBotName } from './race.js';
 import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag } from './assets.js';
 import { Sound } from './audio.js';
+import { LANGS, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang, detectLang } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const REAL_CM = 18;
 
 const RACER_COLORS = [0xffd9c2, 0xffc4e0, 0xd8c8ff, 0xc4ffd8, 0xfff3b0, 0xffb7a8, 0xb8e0ff, 0xf0d0ff, 0xd8ffb8, 0xffd0a0];
-const FACTS = [
-  'Rzęski jajowodu biją w stronę macicy, a plemniki płyną pod prąd. To zjawisko nazywa się reotaksją.',
-  'Po wniknięciu pierwszego plemnika komórka jajowa uwalnia ziarnistości korowe i osłonka twardnieje. Ta reakcja blokuje następne plemniki.',
-  'Leukocyty w drogach rodnych naprawdę pochłaniają plemniki. Z milionów do jajowodu dociera zwykle kilkaset.',
-  'W jajowodzie plemniki przechodzą hiperaktywację: ogonek bije mocniej i szerzej, co pomaga przebić się przez osłonki jaja.',
-  'Prawdziwy plemnik płynie z prędkością około 3 mm na minutę. Ta sama trasa zajmuje mu dłużej niż wyścig w grze.',
-  'Komórka jajowa ma około 0,1 mm średnicy i jest największą komórką ludzkiego ciała, widoczną niemal gołym okiem.',
-];
-
 function store(key, value) {
   try {
     if (value !== undefined) localStorage.setItem(key, value);
@@ -37,9 +29,8 @@ class Game {
     try {
       this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     } catch {
-      $('startBtn').textContent = 'Brak WebGL';
-      $('resultLead').textContent = '';
-      showToast('Ta przeglądarka nie uruchomiła WebGL', 'Włącz akcelerację sprzętową albo otwórz grę w innej przeglądarce.', 1e6);
+      this.setStartState('noWebgl');
+      showToast(t('toast.webgl'), t('toast.webglText'), 1e6);
       return;
     }
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -97,7 +88,7 @@ class Game {
     this.renderer.setAnimationLoop(() => this.frame());
 
     $('startBtn').disabled = false;
-    $('startBtn').textContent = 'Płyń';
+    this.setStartState('ready');
     window.__game = this; // używane przez testy i przy debugowaniu
     if (new URLSearchParams(location.search).has('autopilot')) {
       this.autopilot = true;
@@ -112,7 +103,7 @@ class Game {
       onMucus: (r, w) => {
         this.splash(r, 0xfff0c8, 26);
         w.mesh.userData.flash = 1;
-        if (r === this.player) { this.sound.splat(); this.shake = 0.8; showToast('Ugrzęzłeś w śluzie', 'Następnym razem celuj w świecący otwór.', 1.8); }
+        if (r === this.player) { this.sound.splat(); this.shake = 0.8; showToast(t('toast.mucus'), t('toast.mucusText'), 1.8); }
       },
       onHole: (r, w) => { if (r === this.player) { this.sound.tone(520, 0.18, 'triangle', 0.12, 1.5); w.mesh.userData.flash = 0.5; } },
       onBump: (r, o) => {
@@ -123,18 +114,18 @@ class Game {
       onVirus: (r, o) => {
         this.splash(r, 0x9dff6a, 28);
         o.mesh.visible = false;
-        if (r === this.player) { this.sound.virus(); this.shake = 0.6; showToast('Wirus!', 'Wolniej przez 3 sekundy i bez zrywu.', 1.8); }
+        if (r === this.player) { this.sound.virus(); this.shake = 0.6; showToast(t('toast.virus'), t('toast.virusText'), 1.8); }
       },
       onSmash: (r) => { this.splash(r, 0x9ff4ff, 14); },
       onPickup: (r, p) => {
         p.mesh.visible = false;
         if (r === this.player) {
-          if (p.kind === 'hyper') { this.sound.hyper(); showToast('Hiperaktywacja!', 'Pełne ATP, większa prędkość, przebijasz wszystko.', 2); } else this.sound.pickup();
+          if (p.kind === 'hyper') { this.sound.hyper(); showToast(t('toast.hyper'), t('toast.hyperText'), 2); } else this.sound.pickup();
         }
       },
       onEaten: (r, h) => {
         h.mesh.userData.gulp = 1;
-        if (r === this.player) { this.sound.eaten(); this.shake = 1.2; showToast('Pożarł cię leukocyt', 'Klikaj Spację lub przycisk zrywu, żeby wyrwać się szybciej.', 1.7); }
+        if (r === this.player) { this.sound.eaten(); this.shake = 1.2; showToast(t('toast.eaten'), t('toast.eatenText'), 1.7); }
       },
       onReleased: (r) => { this.splash(r, 0xfff6e8, 20); if (r === this.player) this.sound.tone(300, 0.25, 'triangle', 0.14, 1.8); },
       onBounced: (r) => { this.splash(r, 0x9fe6ff, 18); if (r === this.player) { this.sound.tone(1200, 0.15, 'square', 0.06, 0.5); this.shake = 0.8; } },
@@ -339,7 +330,7 @@ class Game {
     }
     const racers = [];
     if (withPlayer) {
-      const r = new Racer(0, 'Ty', true);
+      const r = new Racer(0, t('hud.you'), true);
       r.mesh = this.pool[0].mesh; r.mat = this.pool[0].mat;
       racers.push(r);
     }
@@ -416,10 +407,10 @@ class Game {
     if (!this.player) return;
     if (winner === this.player) {
       this.sound.win();
-      showToast('Jesteś pierwszy!', 'Osłonka twardnieje. Reszta nie ma już po co płynąć.', 3.5);
+      showToast(t('toast.winYou'), t('toast.winYouText'), 3.5);
     } else {
       this.sound.lose();
-      showToast(`${winner.name} jest pierwszy`, 'Reakcja korowa: osłonka się zamyka.', 3.5);
+      showToast(t('toast.winOther', { name: winner.name }), t('toast.winOtherText'), 3.5);
     }
     this.mode = 'finish';
     this.finishT = 0;
@@ -434,11 +425,11 @@ class Game {
     const won = race.winner === player;
     const timeStr = fmtTime(race.time - (race.afterWin || 0));
     const total = ranking.length;
-    $('resultTitle').textContent = won ? 'Zapłodnienie! Jeden z milionów to ty' : place <= 3 ? `Miejsce ${place}. Było blisko` : `Miejsce ${place} na ${total}`;
+    $('resultTitle').textContent = won ? t('result.win') : place <= 3 ? t('result.close', { place }) : t('result.place', { place, total });
     const leftCm = cm(track.eggS - player.finalS - EGG_R, track);
     $('resultLead').textContent = won
-      ? `Dotarłeś do jaja w ${timeStr}. Zebrana fruktoza: ${player.pickups}. Osłonka zamknęła się za tobą.`
-      : `Zabrakło ${leftCm} cm. ${race.winner.name} dopłynął pierwszy w ${timeStr} i osłonka zamknęła się przed resztą.`;
+      ? t('result.leadWin', { time: timeStr, count: player.pickups })
+      : t('result.leadLose', { cm: leftCm, name: race.winner.name, time: timeStr });
 
     const list = $('table');
     list.textContent = '';
@@ -449,16 +440,16 @@ class Game {
       a.textContent = `${i + 1}. ${r.name}`;
       const b = document.createElement('span');
       b.className = 'num';
-      b.textContent = r === race.winner ? timeStr : `−${cm(track.eggS - r.finalS - EGG_R, track)} cm`;
+      b.textContent = r === race.winner ? timeStr : t('hud.short', { v: cm(track.eggS - r.finalS - EGG_R, track) });
       li.append(a, b);
       list.append(li);
     });
-    $('fact').textContent = FACTS[Math.floor(Math.random() * FACTS.length)];
+    $('fact').textContent = t(`fact.${Math.floor(Math.random() * FACT_COUNT)}`);
     if (won && !player.autopilot) {
       const key = `jzm-best-${this.diff}`;
       const prev = parseFloat(store(key));
-      const t = race.time - (race.afterWin || 0);
-      if (!prev || t < prev) store(key, String(t));
+      const elapsed = race.time - (race.afterWin || 0);
+      if (!prev || elapsed < prev) store(key, String(elapsed));
     }
     this.updateBest();
     $('results').hidden = false;
@@ -488,7 +479,7 @@ class Game {
       if (e.code === 'KeyP' || e.code === 'Escape') this.togglePause();
       if (e.code === 'KeyM') this.sound.setMuted(!this.sound.muted);
       if (e.code === 'Space' && this.player) this.race.struggle(this.player);
-      if (e.code === 'Enter' && this.mode === 'menu' && !$('startBtn').disabled && $('credits').hidden) this.startRace();
+      if (e.code === 'Enter' && this.mode === 'menu' && !$('startBtn').disabled && !$('menu').hidden && $('credits').hidden && document.activeElement?.tagName !== 'BUTTON') this.startRace();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => { this.keys.clear(); this.togglePause(true); });
@@ -575,9 +566,21 @@ class Game {
     $('closeCredits').onclick = () => { $('credits').hidden = true; };
   }
 
+  setStartState(state) {
+    this.startState = state;
+    $('startBtn').textContent = t(`start.${state}`);
+  }
+
+  // Napisy budowane w kodzie, które trzeba odświeżyć po zmianie języka.
+  refreshLanguage() {
+    this.setStartState(this.startState || 'loading');
+    $('langCur').textContent = langName();
+    if (this.diff) this.updateBest();
+  }
+
   updateBest() {
     const b = parseFloat(store(`jzm-best-${this.diff}`));
-    $('best').textContent = b ? `Rekord (${DIFFICULTY[this.diff].label.toLowerCase()}): ${fmtTime(b)}` : '';
+    $('best').textContent = b ? t('best', { level: t(`diff.${this.diff}`).toLocaleLowerCase(getLang()), time: fmtTime(b) }) : '';
   }
 
   buildHud() {
@@ -589,7 +592,7 @@ class Game {
       el.className = 'zone';
       el.style.flex = `${Math.min(z.to, track.eggS) - z.from} 0 0`;
       const b = document.createElement('b');
-      b.textContent = z.name;
+      b.textContent = t(`zone.${z.id}`);
       el.append(b);
       zones.append(el);
       return el;
@@ -597,10 +600,10 @@ class Game {
     const ticks = $('ticks');
     ticks.textContent = '';
     for (const r of this.race.racers) {
-      const t = document.createElement('div');
-      t.className = r === this.player ? 'tick me' : 'tick';
-      ticks.append(t);
-      r.tickEl = t;
+      const tick = document.createElement('div');
+      tick.className = r === this.player ? 'tick me' : 'tick';
+      ticks.append(tick);
+      r.tickEl = tick;
     }
   }
 
@@ -617,8 +620,8 @@ class Game {
     $('place').innerHTML = `${place}<small> / ${rank.length}</small>`;
     $('atpval').textContent = `${Math.round(player.energy)}%`;
     const mm = Math.max(0, (player.vs / BASE_SPEED) * 3.2);
-    $('speed').textContent = `${mm.toFixed(1).replace('.', ',')} mm/min`;
-    $('left').textContent = `do jaja ${cm(track.eggS - player.s - EGG_R, track)} cm`;
+    $('speed').textContent = t('hud.speed', { v: decimal(mm) });
+    $('left').textContent = t('hud.left', { v: cm(track.eggS - player.s - EGG_R, track) });
     for (const r of race.racers) r.tickEl.style.left = `${clamp(r.s / track.eggS, 0, 1) * 100}%`;
 
     const board = $('board');
@@ -639,15 +642,15 @@ class Game {
     if (zi !== this.lastZone) {
       this.lastZone = zi;
       this.zoneEls.forEach((el, i) => el.classList.toggle('on', i === zi));
-      if (this.mode === 'race') showToast(track.zones[zi].name, track.zones[zi].hint, 3.4);
+      if (this.mode === 'race') showToast(t(`zone.${track.zones[zi].id}`), t(`hint.${track.zones[zi].id}`), 3.4);
     }
 
     const chips = [];
-    if (player.hyper > 0) chips.push(['good', 'Hiperaktywacja']);
-    if (player.infected > 0) chips.push(['bad', 'Infekcja']);
-    if (player.inCurrent) chips.push(['bad', 'Prąd rzęsek: płyń przy ścianie']);
-    if (player.drafting) chips.push(['good', 'Ciąg za rywalem +']);
-    if (player.chased) chips.push(['bad', 'Leukocyt na ogonie']);
+    if (player.hyper > 0) chips.push(['good', t('chip.hyper')]);
+    if (player.infected > 0) chips.push(['bad', t('chip.infected')]);
+    if (player.inCurrent) chips.push(['bad', t('chip.current')]);
+    if (player.drafting) chips.push(['good', t('chip.draft')]);
+    if (player.chased) chips.push(['bad', t('chip.chased')]);
     const key = chips.map((c) => c[1]).join('|');
     if (key !== this.chipKey) {
       this.chipKey = key;
@@ -868,7 +871,7 @@ class Game {
     const dt = Math.min(0.05, raw);
     this.last = now;
     this.timeU.value += dt;
-    const t = this.timeU.value;
+    const time = this.timeU.value;
 
     this.watchPerformance(raw);
 
@@ -879,7 +882,7 @@ class Game {
       const n = Math.ceil(this.countdown - 0.4);
       if (n !== this.lastCount && n >= 0) {
         this.lastCount = n;
-        $('count').textContent = n > 0 ? String(n) : 'START';
+        $('count').textContent = n > 0 ? String(n) : t('hud.go');
         this.sound.beep(n === 0);
       }
       if (n <= 0) {
@@ -931,7 +934,7 @@ class Game {
     this.headlight.position.copy(this.camera.position);
     track.point(viewS + 26, 0, 0, this.fill.position);
     this.egg.rotation.y += dt * 0.025;
-    this.halo.material.opacity = 0.75 + Math.sin(t * 1.1) * 0.08;
+    this.halo.material.opacity = 0.75 + Math.sin(time * 1.1) * 0.08;
 
     if (player && this.mode !== 'results') this.updateHud(dt);
     tickToast(dt);
@@ -958,12 +961,14 @@ class Game {
 }
 
 function cm(units, track) {
-  return ((Math.max(0, units) / track.eggS) * REAL_CM).toFixed(1).replace('.', ',');
+  return decimal((Math.max(0, units) / track.eggS) * REAL_CM);
 }
 
 function fmtTime(sec) {
-  const m = Math.floor(sec / 60), s = sec - m * 60;
-  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1).replace('.', ',')}`;
+  // Zaokrąglenie przed podziałem, żeby 9,96 s nie dało "0:010,0".
+  const tenths = Math.round(sec * 10);
+  const m = Math.floor(tenths / 600), s = (tenths - m * 600) / 10;
+  return `${m}:${s < 10 ? '0' : ''}${decimal(s)}`;
 }
 
 let toastLeft = 0;
@@ -980,9 +985,44 @@ function tickToast(dt) {
   }
 }
 
+// Wybór języka: pierwszy ekran przy pierwszej wizycie, później dostępny z menu.
+function setupLanguage(game) {
+  const saved = savedLang();
+  setLang(saved || detectLang(), { remember: false });
+  const list = $('langList');
+  for (const { code, name } of LANGS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.id = `lang-${code}`;
+    b.lang = code;
+    const label = document.createElement('span');
+    label.textContent = name;
+    const tag = document.createElement('small');
+    tag.textContent = code.toUpperCase();
+    b.append(label, tag);
+    b.onclick = () => {
+      setLang(code);
+      game.refreshLanguage();
+      $('lang').hidden = true;
+      $('menu').hidden = false;
+    };
+    list.append(b);
+  }
+  const open = () => {
+    list.querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(b.id === `lang-${getLang()}`)));
+    $('menu').hidden = true;
+    $('lang').hidden = false;
+    $(`lang-${getLang()}`).focus({ preventScroll: true });
+  };
+  $('langBtn').onclick = open;
+  game.refreshLanguage();
+  if (!saved) open();
+}
+
 const game = new Game();
+setupLanguage(game);
 game.init().catch((err) => {
   console.error(err);
-  $('startBtn').textContent = 'Nie udało się wczytać gry';
-  showToast('Nie udało się uruchomić gry', 'Odśwież stronę. Jeśli to nie pomoże, otwórz ją w innej przeglądarce.', 1e6);
+  game.setStartState('failed');
+  showToast(t('toast.failed'), t('toast.failedText'), 1e6);
 });

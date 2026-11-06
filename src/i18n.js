@@ -1,0 +1,387 @@
+// Tłumaczenia gry. Nazwy własne botów i tytuły modeli celowo zostają bez zmian.
+
+export const LANGS = [
+  { code: 'cs', name: 'Čeština' },
+  { code: 'it', name: 'Italiano' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'en', name: 'English' },
+  { code: 'pl', name: 'Polski' },
+  { code: 'sk', name: 'Slovenčina' },
+  { code: 'ru', name: 'Русский' },
+];
+
+export const STRINGS = {
+  pl: {
+    decimal: ',',
+    title1: 'Jeden z', title2: 'Milionów',
+    pick: 'Wybierz język',
+    language: 'Język',
+    lead: 'Startuje około 250 milionów. Do jaja dociera kilkaset. Zapładnia dokładnie jeden. Płyń przez śluz, leukocyty i prąd rzęsek, zanim osłonka się zamknie.',
+    level: 'Poziom', bots: 'Boty',
+    'diff.easy': 'Łatwy', 'diff.normal': 'Normalny', 'diff.hard': 'Trudny',
+    'start.loading': 'Ładuję modele…', 'start.ready': 'Płyń', 'start.noWebgl': 'Brak WebGL', 'start.failed': 'Nie udało się wczytać gry',
+    'keys.steerK': 'WASD, strzałki lub mysz', 'keys.steer': 'sterowanie',
+    'keys.boostK': 'Spacja, Shift lub lewy przycisk', 'keys.boost': 'zryw za ATP (zbieraj fruktozę)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'pauza, dźwięk',
+    best: 'Rekord ({level}): {time}',
+    'pause.title': 'Pauza', 'pause.resume': 'Płyń dalej', 'pause.quit': 'Wyjdź do menu',
+    'results.again': 'Jeszcze raz', 'results.menu': 'Menu',
+    'credits.title': 'Modele i autorzy', 'credits.sperm': 'Plemnik i warstwy komórki jajowej',
+    'credits.changes': 'Zmiany: redukcja siatki, wyprostowany ogonek, półkule złożone w kule.',
+    'credits.wbc': 'Biała krwinka i wirus', 'credits.rbc': 'Czerwona krwinka',
+    'credits.engine': 'Silnik: three.js (MIT). Tunel, cząsteczki i dźwięk są generowane w kodzie gry.',
+    'credits.close': 'Zamknij',
+    'hud.boost': 'ZRYW', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': 'do jaja {v} cm', 'hud.you': 'Ty', 'hud.egg': 'Jajo', 'hud.go': 'START', 'hud.scene': 'Scena wyścigu 3D', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Szyjka macicy', 'hint.cervix': 'Śluz przepuszcza tylko przez otwory. Celuj w świecące kręgi.',
+    'zone.uterus': 'Macica', 'hint.uterus': 'Wielka przestrzeń i patrolujące leukocyty. Omijaj je szerokim łukiem.',
+    'zone.tube': 'Jajowód', 'hint.tube': 'Rzęski pchają środkiem w tył. Płyń przy ścianie, tam prąd jest słaby.',
+    'zone.ampulla': 'Bańka jajowodu', 'hint.ampulla': 'Jajo przed tobą. Pierwszy wygrywa, reszta odbije się od osłonki.',
+    'toast.mucus': 'Ugrzęzłeś w śluzie', 'toast.mucusText': 'Następnym razem celuj w świecący otwór.',
+    'toast.virus': 'Wirus!', 'toast.virusText': 'Wolniej przez 3 sekundy i bez zrywu.',
+    'toast.hyper': 'Hiperaktywacja!', 'toast.hyperText': 'Pełne ATP, większa prędkość, przebijasz wszystko.',
+    'toast.eaten': 'Pożarł cię leukocyt', 'toast.eatenText': 'Klikaj Spację lub przycisk zrywu, żeby wyrwać się szybciej.',
+    'toast.winYou': 'Jesteś pierwszy!', 'toast.winYouText': 'Osłonka twardnieje. Reszta nie ma już po co płynąć.',
+    'toast.winOther': '{name} jest pierwszy', 'toast.winOtherText': 'Reakcja korowa: osłonka się zamyka.',
+    'toast.webgl': 'Ta przeglądarka nie uruchomiła WebGL', 'toast.webglText': 'Włącz akcelerację sprzętową albo otwórz grę w innej przeglądarce.',
+    'toast.failed': 'Nie udało się uruchomić gry', 'toast.failedText': 'Odśwież stronę. Jeśli to nie pomoże, otwórz ją w innej przeglądarce.',
+    'chip.hyper': 'Hiperaktywacja', 'chip.infected': 'Infekcja', 'chip.current': 'Prąd rzęsek: płyń przy ścianie', 'chip.draft': 'Ciąg za rywalem +', 'chip.chased': 'Leukocyt na ogonie',
+    'result.win': 'Zapłodnienie! Jeden z milionów to ty', 'result.close': 'Miejsce {place}. Było blisko', 'result.place': 'Miejsce {place} na {total}',
+    'result.leadWin': 'Dotarłeś do jaja w {time}. Zebrana fruktoza: {count}. Osłonka zamknęła się za tobą.',
+    'result.leadLose': 'Zabrakło {cm} cm. {name} dopłynął pierwszy w {time} i osłonka zamknęła się przed resztą.',
+    'fact.0': 'Rzęski jajowodu biją w stronę macicy, a plemniki płyną pod prąd. To zjawisko nazywa się reotaksją.',
+    'fact.1': 'Po wniknięciu pierwszego plemnika komórka jajowa uwalnia ziarnistości korowe i osłonka twardnieje. Ta reakcja blokuje następne plemniki.',
+    'fact.2': 'Leukocyty w drogach rodnych naprawdę pochłaniają plemniki. Z milionów do jajowodu dociera zwykle kilkaset.',
+    'fact.3': 'W jajowodzie plemniki przechodzą hiperaktywację: ogonek bije mocniej i szerzej, co pomaga przebić się przez osłonki jaja.',
+    'fact.4': 'Prawdziwy plemnik płynie z prędkością około 3 mm na minutę. Ta sama trasa zajmuje mu dłużej niż wyścig w grze.',
+    'fact.5': 'Komórka jajowa ma około 0,1 mm średnicy i jest największą komórką ludzkiego ciała, widoczną niemal gołym okiem.',
+  },
+
+  en: {
+    decimal: '.',
+    title1: 'One in a', title2: 'Million',
+    pick: 'Choose your language',
+    language: 'Language',
+    lead: 'About 250 million set off. A few hundred reach the egg. Exactly one fertilizes it. Swim through mucus, white blood cells and the ciliary current before the egg seals itself.',
+    level: 'Level', bots: 'Bots',
+    'diff.easy': 'Easy', 'diff.normal': 'Normal', 'diff.hard': 'Hard',
+    'start.loading': 'Loading models…', 'start.ready': 'Swim', 'start.noWebgl': 'WebGL unavailable', 'start.failed': 'The game failed to load',
+    'keys.steerK': 'WASD, arrow keys or mouse', 'keys.steer': 'steer',
+    'keys.boostK': 'Space, Shift or left button', 'keys.boost': 'burst, costs ATP (collect fructose)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'pause, sound',
+    best: 'Best time ({level}): {time}',
+    'pause.title': 'Paused', 'pause.resume': 'Keep swimming', 'pause.quit': 'Quit to menu',
+    'results.again': 'Race again', 'results.menu': 'Menu',
+    'credits.title': 'Models and authors', 'credits.sperm': 'Sperm cell and egg cell layers',
+    'credits.changes': 'Changes: reduced mesh, straightened tail, hemispheres joined into spheres.',
+    'credits.wbc': 'White blood cell and virus', 'credits.rbc': 'Red blood cell',
+    'credits.engine': 'Engine: three.js (MIT). The tunnel, particles and sound are generated by the game code.',
+    'credits.close': 'Close',
+    'hud.boost': 'BURST', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': '{v} cm to the egg', 'hud.you': 'You', 'hud.egg': 'Egg', 'hud.go': 'GO!', 'hud.scene': '3D race scene', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Cervix', 'hint.cervix': 'Mucus only lets you through the holes. Aim for the glowing rings.',
+    'zone.uterus': 'Uterus', 'hint.uterus': 'A huge open space with patrolling white blood cells. Give them a wide berth.',
+    'zone.tube': 'Fallopian tube', 'hint.tube': 'Cilia push you back down the middle. Swim near the wall, where the current is weak.',
+    'zone.ampulla': 'Ampulla', 'hint.ampulla': 'The egg is ahead. The first to arrive wins, the rest bounce off its shell.',
+    'toast.mucus': 'Stuck in the mucus', 'toast.mucusText': 'Next time aim for a glowing hole.',
+    'toast.virus': 'Virus!', 'toast.virusText': 'Slower for 3 seconds and no burst.',
+    'toast.hyper': 'Hyperactivation!', 'toast.hyperText': 'Full ATP, more speed, and you smash through everything.',
+    'toast.eaten': 'Eaten by a white blood cell', 'toast.eatenText': 'Tap Space or the burst button to break free faster.',
+    'toast.winYou': 'You got there first!', 'toast.winYouText': 'The shell is hardening. The others have nothing left to swim for.',
+    'toast.winOther': '{name} got there first', 'toast.winOtherText': 'Cortical reaction: the shell is sealing.',
+    'toast.webgl': 'This browser could not start WebGL', 'toast.webglText': 'Turn on hardware acceleration or open the game in another browser.',
+    'toast.failed': 'The game failed to start', 'toast.failedText': 'Reload the page. If that does not help, open it in another browser.',
+    'chip.hyper': 'Hyperactivation', 'chip.infected': 'Infection', 'chip.current': 'Ciliary current: swim near the wall', 'chip.draft': 'Slipstream +', 'chip.chased': 'White blood cell on your tail',
+    'result.win': 'Fertilization! You are the one in a million', 'result.close': 'Place {place}. So close', 'result.place': 'Place {place} of {total}',
+    'result.leadWin': 'You reached the egg in {time}. Fructose collected: {count}. The shell sealed behind you.',
+    'result.leadLose': '{cm} cm short. {name} arrived first in {time} and the shell closed on everyone else.',
+    'fact.0': 'The cilia of the fallopian tube beat towards the uterus, and sperm swim against that flow. This behaviour is called rheotaxis.',
+    'fact.1': 'When the first sperm gets in, the egg releases cortical granules and its shell hardens. This reaction blocks all the others.',
+    'fact.2': 'White blood cells in the reproductive tract really do engulf sperm. Out of millions, usually only a few hundred reach the fallopian tube.',
+    'fact.3': 'In the fallopian tube sperm become hyperactivated: the tail beats harder and wider, which helps them push through the layers around the egg.',
+    'fact.4': 'A real sperm swims at about 3 mm per minute, so the same journey takes it far longer than this race.',
+    'fact.5': 'The egg cell is about 0.1 mm across. It is the largest cell in the human body and almost visible to the naked eye.',
+  },
+
+  de: {
+    decimal: ',',
+    title1: 'Einer von', title2: 'Millionen',
+    pick: 'Sprache wählen',
+    language: 'Sprache',
+    lead: 'Rund 250 Millionen starten. Einige Hundert erreichen die Eizelle. Genau eines befruchtet sie. Schwimm durch Schleim, Leukozyten und die Strömung der Flimmerhärchen, bevor sich die Eihülle schließt.',
+    level: 'Schwierigkeit', bots: 'Bots',
+    'diff.easy': 'Leicht', 'diff.normal': 'Normal', 'diff.hard': 'Schwer',
+    'start.loading': 'Modelle werden geladen…', 'start.ready': 'Losschwimmen', 'start.noWebgl': 'WebGL nicht verfügbar', 'start.failed': 'Spiel konnte nicht geladen werden',
+    'keys.steerK': 'WASD, Pfeiltasten oder Maus', 'keys.steer': 'steuern',
+    'keys.boostK': 'Leertaste, Shift oder linke Maustaste', 'keys.boost': 'Sprint, kostet ATP (Fructose sammeln)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'Pause, Ton',
+    best: 'Bestzeit ({level}): {time}',
+    'pause.title': 'Pause', 'pause.resume': 'Weiterschwimmen', 'pause.quit': 'Zum Menü',
+    'results.again': 'Noch einmal', 'results.menu': 'Menü',
+    'credits.title': 'Modelle und Urheber', 'credits.sperm': 'Spermium und Schichten der Eizelle',
+    'credits.changes': 'Änderungen: Netz vereinfacht, Schwanz begradigt, Halbkugeln zu Kugeln zusammengefügt.',
+    'credits.wbc': 'Weißes Blutkörperchen und Virus', 'credits.rbc': 'Rotes Blutkörperchen',
+    'credits.engine': 'Engine: three.js (MIT). Tunnel, Partikel und Ton werden vom Spielcode erzeugt.',
+    'credits.close': 'Schließen',
+    'hud.boost': 'SPRINT', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': 'noch {v} cm zur Eizelle', 'hud.you': 'Du', 'hud.egg': 'Eizelle', 'hud.go': 'LOS!', 'hud.scene': '3D-Rennszene', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Gebärmutterhals', 'hint.cervix': 'Der Schleim lässt dich nur durch die Öffnungen. Ziele auf die leuchtenden Ringe.',
+    'zone.uterus': 'Gebärmutter', 'hint.uterus': 'Viel Platz und patrouillierende Leukozyten. Mach einen großen Bogen um sie.',
+    'zone.tube': 'Eileiter', 'hint.tube': 'Flimmerhärchen drücken dich in der Mitte zurück. Schwimm an der Wand, dort ist die Strömung schwach.',
+    'zone.ampulla': 'Eileiterampulle', 'hint.ampulla': 'Die Eizelle liegt vor dir. Wer zuerst ankommt, gewinnt. Alle anderen prallen an der Hülle ab.',
+    'toast.mucus': 'Im Schleim stecken geblieben', 'toast.mucusText': 'Ziele nächstes Mal auf eine leuchtende Öffnung.',
+    'toast.virus': 'Virus!', 'toast.virusText': '3 Sekunden langsamer und kein Sprint.',
+    'toast.hyper': 'Hyperaktivierung!', 'toast.hyperText': 'Volles ATP, mehr Tempo, und du durchbrichst alles.',
+    'toast.eaten': 'Vom Leukozyten gefressen', 'toast.eatenText': 'Drück wiederholt die Leertaste oder den Sprint-Knopf, um dich schneller zu befreien.',
+    'toast.winYou': 'Du bist zuerst da!', 'toast.winYouText': 'Die Hülle wird hart. Für die anderen ist das Rennen gelaufen.',
+    'toast.winOther': '{name} ist zuerst da', 'toast.winOtherText': 'Kortikale Reaktion: Die Hülle schließt sich.',
+    'toast.webgl': 'Dieser Browser konnte WebGL nicht starten', 'toast.webglText': 'Aktiviere die Hardwarebeschleunigung oder öffne das Spiel in einem anderen Browser.',
+    'toast.failed': 'Das Spiel konnte nicht starten', 'toast.failedText': 'Lade die Seite neu. Falls das nicht hilft, öffne sie in einem anderen Browser.',
+    'chip.hyper': 'Hyperaktivierung', 'chip.infected': 'Infektion', 'chip.current': 'Zilienströmung: schwimm an der Wand', 'chip.draft': 'Windschatten +', 'chip.chased': 'Leukozyt im Nacken',
+    'result.win': 'Befruchtung! Du bist der eine von Millionen', 'result.close': 'Platz {place}. Knapp daneben', 'result.place': 'Platz {place} von {total}',
+    'result.leadWin': 'Du hast die Eizelle in {time} erreicht. Gesammelte Fructose: {count}. Die Hülle hat sich hinter dir geschlossen.',
+    'result.leadLose': 'Es fehlten {cm} cm. {name} war in {time} zuerst da, und die Hülle hat sich vor allen anderen geschlossen.',
+    'fact.0': 'Die Flimmerhärchen des Eileiters schlagen in Richtung Gebärmutter, und Spermien schwimmen gegen diese Strömung. Das nennt man Rheotaxis.',
+    'fact.1': 'Sobald das erste Spermium eindringt, setzt die Eizelle kortikale Granula frei und ihre Hülle verhärtet sich. Diese Reaktion blockiert alle weiteren Spermien.',
+    'fact.2': 'Leukozyten im Genitaltrakt nehmen tatsächlich Spermien auf. Von Millionen erreichen meist nur einige Hundert den Eileiter.',
+    'fact.3': 'Im Eileiter werden Spermien hyperaktiviert: Der Schwanz schlägt kräftiger und weiter aus, was beim Durchdringen der Eihüllen hilft.',
+    'fact.4': 'Ein echtes Spermium schwimmt etwa 3 mm pro Minute. Für dieselbe Strecke braucht es also viel länger als dieses Rennen.',
+    'fact.5': 'Die Eizelle misst etwa 0,1 mm. Sie ist die größte Zelle des menschlichen Körpers und fast mit bloßem Auge sichtbar.',
+  },
+
+  it: {
+    decimal: ',',
+    title1: 'Uno su un', title2: 'Milione',
+    pick: 'Scegli la lingua',
+    language: 'Lingua',
+    lead: 'Ne partono circa 250 milioni. Qualche centinaio raggiunge l’ovulo. Uno solo lo feconda. Nuota tra muco, globuli bianchi e la corrente delle ciglia prima che l’involucro si chiuda.',
+    level: 'Livello', bots: 'Bot',
+    'diff.easy': 'Facile', 'diff.normal': 'Normale', 'diff.hard': 'Difficile',
+    'start.loading': 'Caricamento modelli…', 'start.ready': 'Nuota', 'start.noWebgl': 'WebGL non disponibile', 'start.failed': 'Impossibile caricare il gioco',
+    'keys.steerK': 'WASD, frecce o mouse', 'keys.steer': 'sterzare',
+    'keys.boostK': 'Spazio, Shift o tasto sinistro', 'keys.boost': 'scatto, consuma ATP (raccogli il fruttosio)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'pausa, audio',
+    best: 'Record ({level}): {time}',
+    'pause.title': 'Pausa', 'pause.resume': 'Continua a nuotare', 'pause.quit': 'Torna al menu',
+    'results.again': 'Riprova', 'results.menu': 'Menu',
+    'credits.title': 'Modelli e autori', 'credits.sperm': 'Spermatozoo e strati dell’ovulo',
+    'credits.changes': 'Modifiche: mesh ridotta, coda raddrizzata, semisfere unite in sfere.',
+    'credits.wbc': 'Globulo bianco e virus', 'credits.rbc': 'Globulo rosso',
+    'credits.engine': 'Motore: three.js (MIT). Tunnel, particelle e audio sono generati dal codice del gioco.',
+    'credits.close': 'Chiudi',
+    'hud.boost': 'SCATTO', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': '{v} cm all’ovulo', 'hud.you': 'Tu', 'hud.egg': 'Ovulo', 'hud.go': 'VIA!', 'hud.scene': 'Scena di gara in 3D', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Collo dell’utero', 'hint.cervix': 'Il muco ti lascia passare solo dai fori. Punta agli anelli luminosi.',
+    'zone.uterus': 'Utero', 'hint.uterus': 'Un grande spazio aperto pattugliato dai globuli bianchi. Stai loro alla larga.',
+    'zone.tube': 'Tuba di Falloppio', 'hint.tube': 'Al centro le ciglia ti spingono indietro. Nuota vicino alla parete, dove la corrente è debole.',
+    'zone.ampulla': 'Ampolla tubarica', 'hint.ampulla': 'L’ovulo è davanti a te. Vince chi arriva primo, gli altri rimbalzano sull’involucro.',
+    'toast.mucus': 'Bloccato nel muco', 'toast.mucusText': 'La prossima volta punta a un foro luminoso.',
+    'toast.virus': 'Virus!', 'toast.virusText': 'Più lento per 3 secondi e niente scatto.',
+    'toast.hyper': 'Iperattivazione!', 'toast.hyperText': 'ATP al massimo, più velocità e sfondi tutto.',
+    'toast.eaten': 'Divorato da un globulo bianco', 'toast.eatenText': 'Premi più volte Spazio o il pulsante di scatto per liberarti prima.',
+    'toast.winYou': 'Sei arrivato primo!', 'toast.winYouText': 'L’involucro si indurisce. Per gli altri non c’è più niente da fare.',
+    'toast.winOther': '{name} è arrivato primo', 'toast.winOtherText': 'Reazione corticale: l’involucro si sta chiudendo.',
+    'toast.webgl': 'Questo browser non ha avviato WebGL', 'toast.webglText': 'Attiva l’accelerazione hardware o apri il gioco in un altro browser.',
+    'toast.failed': 'Impossibile avviare il gioco', 'toast.failedText': 'Ricarica la pagina. Se non basta, aprila in un altro browser.',
+    'chip.hyper': 'Iperattivazione', 'chip.infected': 'Infezione', 'chip.current': 'Corrente delle ciglia: nuota vicino alla parete', 'chip.draft': 'Scia del rivale +', 'chip.chased': 'Globulo bianco alle calcagna',
+    'result.win': 'Fecondazione! L’uno su un milione sei tu', 'result.close': 'Posizione {place}. C’eri quasi', 'result.place': 'Posizione {place} su {total}',
+    'result.leadWin': 'Hai raggiunto l’ovulo in {time}. Fruttosio raccolto: {count}. L’involucro si è chiuso alle tue spalle.',
+    'result.leadLose': 'Mancavano {cm} cm. {name} è arrivato primo in {time} e l’involucro si è chiuso davanti a tutti gli altri.',
+    'fact.0': 'Le ciglia della tuba battono verso l’utero e gli spermatozoi nuotano controcorrente. Questo fenomeno si chiama reotassi.',
+    'fact.1': 'Quando entra il primo spermatozoo, l’ovulo rilascia i granuli corticali e il suo involucro si indurisce. Questa reazione blocca tutti gli altri.',
+    'fact.2': 'I globuli bianchi delle vie genitali inglobano davvero gli spermatozoi. Di milioni, di solito solo qualche centinaio raggiunge la tuba.',
+    'fact.3': 'Nella tuba gli spermatozoi vanno incontro a iperattivazione: la coda batte più forte e più ampia, e questo li aiuta a superare gli strati attorno all’ovulo.',
+    'fact.4': 'Un vero spermatozoo nuota a circa 3 mm al minuto, quindi per lo stesso percorso impiega molto più di questa gara.',
+    'fact.5': 'L’ovulo misura circa 0,1 mm. È la cellula più grande del corpo umano, quasi visibile a occhio nudo.',
+  },
+
+  cs: {
+    decimal: ',',
+    title1: 'Jeden z', title2: 'Milionů',
+    pick: 'Vyberte jazyk',
+    language: 'Jazyk',
+    lead: 'Na start jich vyráží asi 250 milionů. K vajíčku jich doplave několik set. Oplodní ho jediná. Proplav hlenem, leukocyty a proudem řasinek, než se obal vajíčka uzavře.',
+    level: 'Obtížnost', bots: 'Boti',
+    'diff.easy': 'Lehká', 'diff.normal': 'Normální', 'diff.hard': 'Těžká',
+    'start.loading': 'Načítám modely…', 'start.ready': 'Plav', 'start.noWebgl': 'WebGL není k dispozici', 'start.failed': 'Hru se nepodařilo načíst',
+    'keys.steerK': 'WASD, šipky nebo myš', 'keys.steer': 'řízení',
+    'keys.boostK': 'Mezerník, Shift nebo levé tlačítko', 'keys.boost': 'sprint za ATP (sbírej fruktózu)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'pauza, zvuk',
+    best: 'Rekord ({level}): {time}',
+    'pause.title': 'Pauza', 'pause.resume': 'Plavat dál', 'pause.quit': 'Do menu',
+    'results.again': 'Znovu', 'results.menu': 'Menu',
+    'credits.title': 'Modely a autoři', 'credits.sperm': 'Spermie a vrstvy vajíčka',
+    'credits.changes': 'Úpravy: zjednodušená síť, narovnaný bičík, polokoule spojené do koulí.',
+    'credits.wbc': 'Bílá krvinka a virus', 'credits.rbc': 'Červená krvinka',
+    'credits.engine': 'Engine: three.js (MIT). Tunel, částice a zvuk generuje kód hry.',
+    'credits.close': 'Zavřít',
+    'hud.boost': 'SPRINT', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': 'k vajíčku {v} cm', 'hud.you': 'Ty', 'hud.egg': 'Vajíčko', 'hud.go': 'START', 'hud.scene': '3D scéna závodu', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Děložní hrdlo', 'hint.cervix': 'Hlen propouští jen otvory. Miř na svítící kruhy.',
+    'zone.uterus': 'Děloha', 'hint.uterus': 'Obrovský prostor a hlídkující leukocyty. Vyhýbej se jim širokým obloukem.',
+    'zone.tube': 'Vejcovod', 'hint.tube': 'Řasinky tě uprostřed tlačí zpět. Plav u stěny, tam je proud slabý.',
+    'zone.ampulla': 'Ampula vejcovodu', 'hint.ampulla': 'Vajíčko je před tebou. Vyhrává první, ostatní se od obalu odrazí.',
+    'toast.mucus': 'Uvíznutí v hlenu', 'toast.mucusText': 'Příště miř na svítící otvor.',
+    'toast.virus': 'Virus!', 'toast.virusText': 'Na 3 sekundy pomaleji a bez sprintu.',
+    'toast.hyper': 'Hyperaktivace!', 'toast.hyperText': 'Plné ATP, vyšší rychlost a prorazíš všechno.',
+    'toast.eaten': 'Pohltil tě leukocyt', 'toast.eatenText': 'Opakovaně mačkej mezerník nebo tlačítko sprintu a vyprostíš se rychleji.',
+    'toast.winYou': 'Jsi první!', 'toast.winYouText': 'Obal tvrdne. Ostatní už nemají proč plavat.',
+    'toast.winOther': 'První je {name}', 'toast.winOtherText': 'Kortikální reakce: obal se uzavírá.',
+    'toast.webgl': 'Tento prohlížeč nespustil WebGL', 'toast.webglText': 'Zapni hardwarovou akceleraci nebo otevři hru v jiném prohlížeči.',
+    'toast.failed': 'Hru se nepodařilo spustit', 'toast.failedText': 'Obnov stránku. Pokud to nepomůže, otevři ji v jiném prohlížeči.',
+    'chip.hyper': 'Hyperaktivace', 'chip.infected': 'Infekce', 'chip.current': 'Proud řasinek: plav u stěny', 'chip.draft': 'Závětří za soupeřem +', 'chip.chased': 'Leukocyt v patách',
+    'result.win': 'Oplození! Ten jeden z milionů jsi ty', 'result.close': '{place}. místo. Bylo to těsné', 'result.place': '{place}. místo z {total}',
+    'result.leadWin': 'K vajíčku jsi doplaval za {time}. Sebraná fruktóza: {count}. Obal se za tebou uzavřel.',
+    'result.leadLose': 'Chybělo {cm} cm. První doplaval {name} za {time} a obal se před ostatními uzavřel.',
+    'fact.0': 'Řasinky vejcovodu kmitají směrem k děloze a spermie plavou proti proudu. Tomuto jevu se říká reotaxe.',
+    'fact.1': 'Po proniknutí první spermie uvolní vajíčko kortikální granula a jeho obal ztvrdne. Tato reakce zablokuje všechny další spermie.',
+    'fact.2': 'Leukocyty v pohlavních cestách spermie skutečně pohlcují. Z milionů se do vejcovodu obvykle dostane jen několik set.',
+    'fact.3': 'Ve vejcovodu procházejí spermie hyperaktivací: bičík kmitá silněji a v širším rozsahu, což jim pomáhá proniknout obaly vajíčka.',
+    'fact.4': 'Skutečná spermie plave rychlostí asi 3 mm za minutu, takže stejná cesta jí trvá mnohem déle než tento závod.',
+    'fact.5': 'Vajíčko měří asi 0,1 mm. Je to největší buňka lidského těla, téměř viditelná pouhým okem.',
+  },
+
+  sk: {
+    decimal: ',',
+    title1: 'Jeden z', title2: 'Miliónov',
+    pick: 'Vyberte jazyk',
+    language: 'Jazyk',
+    lead: 'Na štart ich vyráža asi 250 miliónov. K vajíčku ich dopláva niekoľko stoviek. Oplodní ho jediná. Preplávaj hlienom, leukocytmi a prúdom riasiniek, kým sa obal vajíčka uzavrie.',
+    level: 'Obťažnosť', bots: 'Boti',
+    'diff.easy': 'Ľahká', 'diff.normal': 'Normálna', 'diff.hard': 'Ťažká',
+    'start.loading': 'Načítavam modely…', 'start.ready': 'Plávaj', 'start.noWebgl': 'WebGL nie je k dispozícii', 'start.failed': 'Hru sa nepodarilo načítať',
+    'keys.steerK': 'WASD, šípky alebo myš', 'keys.steer': 'riadenie',
+    'keys.boostK': 'Medzerník, Shift alebo ľavé tlačidlo', 'keys.boost': 'šprint za ATP (zbieraj fruktózu)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'pauza, zvuk',
+    best: 'Rekord ({level}): {time}',
+    'pause.title': 'Pauza', 'pause.resume': 'Plávať ďalej', 'pause.quit': 'Do menu',
+    'results.again': 'Znova', 'results.menu': 'Menu',
+    'credits.title': 'Modely a autori', 'credits.sperm': 'Spermia a vrstvy vajíčka',
+    'credits.changes': 'Úpravy: zjednodušená sieť, vyrovnaný bičík, pologule spojené do gúľ.',
+    'credits.wbc': 'Biela krvinka a vírus', 'credits.rbc': 'Červená krvinka',
+    'credits.engine': 'Engine: three.js (MIT). Tunel, častice a zvuk generuje kód hry.',
+    'credits.close': 'Zavrieť',
+    'hud.boost': 'ŠPRINT', 'hud.atp': 'ATP', 'hud.speed': '{v} mm/min', 'hud.left': 'k vajíčku {v} cm', 'hud.you': 'Ty', 'hud.egg': 'Vajíčko', 'hud.go': 'ŠTART', 'hud.scene': '3D scéna pretekov', 'hud.short': '−{v} cm',
+    'zone.cervix': 'Krčok maternice', 'hint.cervix': 'Hlien prepúšťa len otvormi. Mier na svietiace kruhy.',
+    'zone.uterus': 'Maternica', 'hint.uterus': 'Obrovský priestor a hliadkujúce leukocyty. Vyhýbaj sa im širokým oblúkom.',
+    'zone.tube': 'Vajíčkovod', 'hint.tube': 'Riasinky ťa v strede tlačia späť. Plávaj pri stene, tam je prúd slabý.',
+    'zone.ampulla': 'Ampula vajíčkovodu', 'hint.ampulla': 'Vajíčko je pred tebou. Vyhráva prvý, ostatní sa od obalu odrazia.',
+    'toast.mucus': 'Uviaznutie v hliene', 'toast.mucusText': 'Nabudúce mier na svietiaci otvor.',
+    'toast.virus': 'Vírus!', 'toast.virusText': 'Na 3 sekundy pomalšie a bez šprintu.',
+    'toast.hyper': 'Hyperaktivácia!', 'toast.hyperText': 'Plné ATP, vyššia rýchlosť a prerazíš všetko.',
+    'toast.eaten': 'Pohltil ťa leukocyt', 'toast.eatenText': 'Opakovane stláčaj medzerník alebo tlačidlo šprintu a vyslobodíš sa rýchlejšie.',
+    'toast.winYou': 'Si prvý!', 'toast.winYouText': 'Obal tvrdne. Ostatní už nemajú prečo plávať.',
+    'toast.winOther': 'Prvý je {name}', 'toast.winOtherText': 'Kortikálna reakcia: obal sa uzatvára.',
+    'toast.webgl': 'Tento prehliadač nespustil WebGL', 'toast.webglText': 'Zapni hardvérovú akceleráciu alebo otvor hru v inom prehliadači.',
+    'toast.failed': 'Hru sa nepodarilo spustiť', 'toast.failedText': 'Obnov stránku. Ak to nepomôže, otvor ju v inom prehliadači.',
+    'chip.hyper': 'Hyperaktivácia', 'chip.infected': 'Infekcia', 'chip.current': 'Prúd riasiniek: plávaj pri stene', 'chip.draft': 'Záveterie za súperom +', 'chip.chased': 'Leukocyt v pätách',
+    'result.win': 'Oplodnenie! Ten jeden z miliónov si ty', 'result.close': '{place}. miesto. Bolo to tesné', 'result.place': '{place}. miesto z {total}',
+    'result.leadWin': 'K vajíčku si doplával za {time}. Zozbieraná fruktóza: {count}. Obal sa za tebou uzavrel.',
+    'result.leadLose': 'Chýbalo {cm} cm. Prvý doplával {name} za {time} a obal sa pred ostatnými uzavrel.',
+    'fact.0': 'Riasinky vajíčkovodu kmitajú smerom k maternici a spermie plávajú proti prúdu. Tento jav sa nazýva reotaxia.',
+    'fact.1': 'Po preniknutí prvej spermie uvoľní vajíčko kortikálne granuly a jeho obal stvrdne. Táto reakcia zablokuje všetky ďalšie spermie.',
+    'fact.2': 'Leukocyty v pohlavných cestách spermie naozaj pohlcujú. Z miliónov sa do vajíčkovodu zvyčajne dostane len niekoľko stoviek.',
+    'fact.3': 'Vo vajíčkovode prechádzajú spermie hyperaktiváciou: bičík kmitá silnejšie a v širšom rozsahu, čo im pomáha preniknúť obalmi vajíčka.',
+    'fact.4': 'Skutočná spermia pláva rýchlosťou asi 3 mm za minútu, takže rovnaká cesta jej trvá oveľa dlhšie ako tieto preteky.',
+    'fact.5': 'Vajíčko meria asi 0,1 mm. Je to najväčšia bunka ľudského tela, takmer viditeľná voľným okom.',
+  },
+
+  ru: {
+    decimal: ',',
+    title1: 'Один из', title2: 'Миллионов',
+    pick: 'Выберите язык',
+    language: 'Язык',
+    lead: 'На старт выходят около 250 миллионов. До яйцеклетки добираются несколько сотен. Оплодотворяет её только один. Проплыви сквозь слизь, лейкоциты и поток ресничек, пока оболочка не закрылась.',
+    level: 'Сложность', bots: 'Боты',
+    'diff.easy': 'Лёгкая', 'diff.normal': 'Обычная', 'diff.hard': 'Тяжёлая',
+    'start.loading': 'Загружаю модели…', 'start.ready': 'Плыть', 'start.noWebgl': 'WebGL недоступен', 'start.failed': 'Не удалось загрузить игру',
+    'keys.steerK': 'WASD, стрелки или мышь', 'keys.steer': 'управление',
+    'keys.boostK': 'Пробел, Shift или левая кнопка', 'keys.boost': 'рывок за АТФ (собирай фруктозу)',
+    'keys.pauseK': 'P / Esc, M', 'keys.pause': 'пауза, звук',
+    best: 'Рекорд ({level}): {time}',
+    'pause.title': 'Пауза', 'pause.resume': 'Плыть дальше', 'pause.quit': 'Выйти в меню',
+    'results.again': 'Ещё раз', 'results.menu': 'Меню',
+    'credits.title': 'Модели и авторы', 'credits.sperm': 'Сперматозоид и слои яйцеклетки',
+    'credits.changes': 'Изменения: упрощённая сетка, выпрямленный хвост, полусферы соединены в сферы.',
+    'credits.wbc': 'Лейкоцит и вирус', 'credits.rbc': 'Эритроцит',
+    'credits.engine': 'Движок: three.js (MIT). Туннель, частицы и звук создаются кодом игры.',
+    'credits.close': 'Закрыть',
+    'hud.boost': 'РЫВОК', 'hud.atp': 'АТФ', 'hud.speed': '{v} мм/мин', 'hud.left': 'до яйцеклетки {v} см', 'hud.you': 'Ты', 'hud.egg': 'Яйцеклетка', 'hud.go': 'СТАРТ', 'hud.scene': '3D-сцена гонки', 'hud.short': '−{v} см',
+    'zone.cervix': 'Шейка матки', 'hint.cervix': 'Слизь пропускает только через отверстия. Целься в светящиеся кольца.',
+    'zone.uterus': 'Матка', 'hint.uterus': 'Огромное пространство и патрулирующие лейкоциты. Обходи их стороной.',
+    'zone.tube': 'Маточная труба', 'hint.tube': 'Реснички отбрасывают назад посередине. Плыви у стенки, там течение слабое.',
+    'zone.ampulla': 'Ампула трубы', 'hint.ampulla': 'Яйцеклетка впереди. Побеждает первый, остальные отскакивают от оболочки.',
+    'toast.mucus': 'Застрял в слизи', 'toast.mucusText': 'В следующий раз целься в светящееся отверстие.',
+    'toast.virus': 'Вирус!', 'toast.virusText': 'Медленнее на 3 секунды и без рывка.',
+    'toast.hyper': 'Гиперактивация!', 'toast.hyperText': 'Полный запас АТФ, выше скорость, и ты пробиваешь всё.',
+    'toast.eaten': 'Тебя поглотил лейкоцит', 'toast.eatenText': 'Жми пробел или кнопку рывка, чтобы вырваться быстрее.',
+    'toast.winYou': 'Ты первый!', 'toast.winYouText': 'Оболочка твердеет. Остальным больше незачем плыть.',
+    'toast.winOther': 'Первым приплыл {name}', 'toast.winOtherText': 'Кортикальная реакция: оболочка закрывается.',
+    'toast.webgl': 'Этот браузер не смог запустить WebGL', 'toast.webglText': 'Включи аппаратное ускорение или открой игру в другом браузере.',
+    'toast.failed': 'Не удалось запустить игру', 'toast.failedText': 'Обнови страницу. Если это не поможет, открой её в другом браузере.',
+    'chip.hyper': 'Гиперактивация', 'chip.infected': 'Инфекция', 'chip.current': 'Поток ресничек: плыви у стенки', 'chip.draft': 'В потоке за соперником +', 'chip.chased': 'Лейкоцит на хвосте',
+    'result.win': 'Оплодотворение! Один из миллионов — это ты', 'result.close': '{place}-е место. Было близко', 'result.place': '{place}-е место из {total}',
+    'result.leadWin': 'Ты добрался до яйцеклетки за {time}. Собрано фруктозы: {count}. Оболочка закрылась за тобой.',
+    'result.leadLose': 'Не хватило {cm} см. {name} приплыл первым за {time}, и оболочка закрылась перед остальными.',
+    'fact.0': 'Реснички маточной трубы бьются в сторону матки, а сперматозоиды плывут против течения. Это явление называется реотаксисом.',
+    'fact.1': 'Когда внутрь проникает первый сперматозоид, яйцеклетка выделяет кортикальные гранулы, и её оболочка твердеет. Эта реакция блокирует все остальные сперматозоиды.',
+    'fact.2': 'Лейкоциты в половых путях действительно поглощают сперматозоиды. Из миллионов до маточной трубы обычно добираются лишь несколько сотен.',
+    'fact.3': 'В маточной трубе сперматозоиды проходят гиперактивацию: хвост бьётся сильнее и шире, и это помогает пробиться сквозь оболочки яйцеклетки.',
+    'fact.4': 'Настоящий сперматозоид плывёт со скоростью около 3 мм в минуту, поэтому тот же путь занимает у него гораздо больше времени, чем эта гонка.',
+    'fact.5': 'Яйцеклетка имеет диаметр около 0,1 мм. Это самая большая клетка человеческого тела, почти различимая невооружённым глазом.',
+  },
+};
+
+export const FACT_COUNT = 6;
+const STORE_KEY = 'jzm-lang';
+
+let current = 'en';
+
+function isLang(code) {
+  return Object.prototype.hasOwnProperty.call(STRINGS, code);
+}
+
+export function getLang() {
+  return current;
+}
+
+export function langName(code = current) {
+  return LANGS.find((l) => l.code === code).name;
+}
+
+// Język zapisany przy poprzedniej wizycie albo null, jeśli gracz jeszcze nie wybierał.
+export function savedLang() {
+  try {
+    const v = localStorage.getItem(STORE_KEY);
+    return v && isLang(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function detectLang() {
+  const wanted = navigator.languages?.length ? navigator.languages : [navigator.language || 'en'];
+  for (const tag of wanted) {
+    const code = String(tag).slice(0, 2).toLowerCase();
+    if (isLang(code)) return code;
+  }
+  return 'en';
+}
+
+export function t(key, params) {
+  const text = STRINGS[current][key] ?? STRINGS.en[key] ?? key;
+  if (!params) return text;
+  return text.replace(/\{(\w+)\}/g, (m, name) => (name in params ? params[name] : m));
+}
+
+export function decimal(value) {
+  return value.toFixed(1).replace('.', STRINGS[current].decimal);
+}
+
+// Ustawia język i przepisuje napisy ze strony (data-i18n, data-i18n-title, data-i18n-aria).
+export function setLang(code, { remember = true } = {}) {
+  current = isLang(code) ? code : 'en';
+  if (remember) {
+    try { localStorage.setItem(STORE_KEY, current); } catch { /* język zostaje tylko na tę wizytę */ }
+  }
+  document.documentElement.lang = current;
+  document.title = `${t('title1')} ${t('title2')}`;
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+}

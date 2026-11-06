@@ -55,10 +55,10 @@ export class Track {
 
     const L = this.length;
     this.zones = [
-      { id: 'cervix', name: 'Szyjka macicy', hint: 'Śluz przepuszcza tylko przez otwory. Celuj w świecące kręgi.', from: 0, to: 0.25 * L, tint: [0.98, 0.62, 0.62] },
-      { id: 'uterus', name: 'Macica', hint: 'Wielka przestrzeń i patrolujące leukocyty. Omijaj je szerokim łukiem.', from: 0.25 * L, to: 0.51 * L, tint: [0.72, 0.13, 0.2] },
-      { id: 'tube', name: 'Jajowód', hint: 'Rzęski pchają środkiem w tył. Płyń przy ścianie, tam prąd jest słaby.', from: 0.51 * L, to: 0.82 * L, tint: [0.86, 0.32, 0.5] },
-      { id: 'ampulla', name: 'Bańka jajowodu', hint: 'Jajo przed tobą. Pierwszy wygrywa, reszta odbije się od osłonki.', from: 0.82 * L, to: L, tint: [0.98, 0.56, 0.36] },
+      { id: 'cervix', from: 0, to: 0.25 * L, tint: [0.98, 0.62, 0.62] },
+      { id: 'uterus', from: 0.25 * L, to: 0.51 * L, tint: [0.72, 0.13, 0.2] },
+      { id: 'tube', from: 0.51 * L, to: 0.82 * L, tint: [0.86, 0.32, 0.5] },
+      { id: 'ampulla', from: 0.82 * L, to: L, tint: [0.98, 0.56, 0.36] },
     ];
 
     const keys = [

@@ -12,6 +12,10 @@ npm start
 
 Potem otwórz http://localhost:8123. Modele są wbudowane w `dist/game.js`, więc do gry wystarczą `dist/index.html` i `dist/game.js`.
 
+## Języki
+
+Gra działa po czesku, włosku, niemiecku, angielsku, polsku, słowacku i rosyjsku. Przy pierwszej wizycie zaczyna się od wyboru języka, a później można go zmienić w menu. Tłumaczenia są w `src/i18n.js`.
+
 ## Praca nad kodem
 
 - `npm run build` składa `dist/` z `src/` i `public/models/` (modele trafiają do bundla).
