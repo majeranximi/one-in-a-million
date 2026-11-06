@@ -1,7 +1,7 @@
-// Ładowanie modeli GLB i materiały "biologiczne" (poświata krawędzi, fala ogonka).
+// GLB model loading and "biological" materials (edge glow, tail wave).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-// Modele są wbudowane w bundle (esbuild, loader "binary"), więc gra nie pobiera żadnych plików.
+// The models are embedded in the bundle (esbuild, "binary" loader), so the game downloads no extra files.
 import spermGlb from '../public/models/sperm.glb';
 import eggGlb from '../public/models/egg.glb';
 import wbcGlb from '../public/models/WhiteBloodCell.glb';
@@ -15,11 +15,11 @@ function firstMesh(root) {
   return found;
 }
 
-// Geometria ze światowym przekształceniem, wyśrodkowana i przeskalowana do promienia 1.
+// Geometry with its world transform applied, centered and scaled to radius 1.
 function normalized(mesh) {
   const g = mesh.geometry.clone();
   g.applyMatrix4(mesh.matrixWorld);
-  // Część modeli z Poly Pizza nie ma normalnych; bez nich oświetlenie daje NaN.
+  // Some Poly Pizza models have no normals; without them the lighting produces NaN.
   if (!g.attributes.normal) g.computeVertexNormals();
   g.computeBoundingSphere();
   const { center, radius } = g.boundingSphere;
@@ -46,7 +46,7 @@ export async function loadModels() {
   };
 }
 
-// Materiał z poświatą na krawędziach, która daje wrażenie półprzezroczystej komórki.
+// Material with an edge glow that makes cells look translucent.
 export function bioMaterial(params, { rim = 0x000000, rimPower = 2.4, rimStrength = 1, wave = false } = {}) {
   const mat = new THREE.MeshStandardMaterial(params);
   const rimColor = new THREE.Color(rim);
@@ -81,7 +81,7 @@ export function bioMaterial(params, { rim = 0x000000, rimPower = 2.4, rimStrengt
   return mat;
 }
 
-// Ściana: perystaltyka w wierzchołkach i delikatne przeświecanie tkanki.
+// Wall: peristalsis in the vertex shader and a subtle tissue glow.
 export function wallMaterial(map, timeUniform) {
   const mat = new THREE.MeshStandardMaterial({
     map, bumpMap: map, bumpScale: 1.1, vertexColors: true, roughness: 0.42, metalness: 0,
@@ -93,7 +93,7 @@ export function wallMaterial(map, timeUniform) {
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         transformed += normal * (0.55 * sin(aS * 0.045 - uTime * 1.3) + 0.18 * sin(aS * 0.17 + uTime * 0.9));`);
     shader.fragmentShader = shader.fragmentShader
-      // Bump przy zerowych pochodnych ekranowych potrafi dać NaN w normalnej.
+      // Bump mapping can produce a NaN normal when screen-space derivatives are zero.
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
        if (any(isnan(normal))) normal = nonPerturbedNormal;`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>

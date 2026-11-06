@@ -1,9 +1,9 @@
-// Szybki test bez przeglądarki: autopilot w roli gracza kontra boty, ze stałym krokiem czasu.
+// Quick test without a browser: autopilot as the player against bots, with a fixed time step.
 import { Track } from '../src/track.js';
 import { Race, Racer, DIFFICULTY, makeBotName } from '../src/race.js';
 
 const track = new Track();
-console.log('długość toru', track.length.toFixed(0), 'jajo przy', track.eggS.toFixed(0));
+console.log('track length', track.length.toFixed(0), 'egg at', track.eggS.toFixed(0));
 const RUNS = 30;
 for (const diff of ['easy', 'normal', 'hard']) {
   const places = [], times = [];
@@ -24,6 +24,6 @@ for (const diff of ['easy', 'normal', 'hard']) {
     times.push(race.time);
   }
   const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
-  console.log(diff, 'średnie miejsce autopilota', mean(places).toFixed(1), 'wygrane', places.filter((p) => p === 1).length, '/', RUNS,
-    'średni czas', mean(times).toFixed(1), 's', 'NaN', bad, 'bez zwycięzcy', timeouts);
+  console.log(diff, 'autopilot average place', mean(places).toFixed(1), 'wins', places.filter((p) => p === 1).length, '/', RUNS,
+    'average time', mean(times).toFixed(1), 's', 'NaN', bad, 'no winner', timeouts);
 }

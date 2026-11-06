@@ -1,4 +1,4 @@
-// Scena, kamera, wejście, HUD i pętla gry.
+// Scene, camera, input, HUD and the game loop.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -89,7 +89,7 @@ class Game {
 
     $('startBtn').disabled = false;
     this.setStartState('ready');
-    window.__game = this; // używane przez testy i przy debugowaniu
+    window.__game = this; // used for testing and debugging
     if (new URLSearchParams(location.search).has('autopilot')) {
       this.autopilot = true;
       this.startRace();
@@ -134,11 +134,11 @@ class Game {
     };
   }
 
-  // ---------- Świat ----------
+  // ---------- World ----------
   buildCourseMeshes() {
     const { models, race, scene } = this;
 
-    // Śluz: błona z otworami; krawędzie otworów świecą, żeby dało się w nie celować.
+    // Mucus: a membrane with holes; the hole edges glow so they are easy to aim for.
     const wallMat = new THREE.MeshStandardMaterial({ color: 0xcfa35e, roughness: 0.7, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false, emissive: 0x8a6226, emissiveIntensity: 0.16 });
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x8ff4ff, fog: false, toneMapped: false });
     for (const w of race.walls) {
@@ -163,7 +163,7 @@ class Game {
       group.userData.flash = 0;
     }
 
-    // Krwinki, wirusy, leukocyty: osobne materiały na typ, wspólna geometria.
+    // Blood cells, viruses, white blood cells: one material per type, shared geometry.
     const rbcMat = bioMaterial({ color: 0xd31b2a, roughness: 0.38, flatShading: false }, { rim: 0xff7a68, rimStrength: 0.75 });
     const virusMat = bioMaterial({ map: models.virusMap, color: 0xb7ff7a, roughness: 0.5 }, { rim: 0x7bff5c, rimStrength: 1.15 });
     const wbcMat = bioMaterial({ map: models.wbcMap, color: 0xcfcbe0, roughness: 0.55, transparent: true, opacity: 0.68 }, { rim: 0xc8d8ff, rimStrength: 0.55 });
@@ -178,7 +178,7 @@ class Game {
       scene.add(h.mesh);
     }
 
-    // Fruktoza i hiperaktywacja.
+    // Fructose and hyperactivation.
     const fructoseGeo = new THREE.IcosahedronGeometry(0.5, 3);
     const fructoseMat = bioMaterial({ color: 0xffc14a, emissive: 0xff9a20, emissiveIntensity: 0.9, roughness: 0.25 }, { rim: 0xfff0b0, rimStrength: 2.2 });
     const hyperGeo = new THREE.OctahedronGeometry(1.05, 0);
@@ -193,7 +193,7 @@ class Game {
     const { a, t, u, r, m } = this.tmp;
     this.track.point(s, 0, 0, a);
     this.track.frame(s, t, u, r);
-    // Płaszczyzna (x,y) błony = (prawo, góra) toru; (prawo, góra, -T) jest układem prawoskrętnym.
+    // The membrane's (x,y) plane = the track's (right, up); (right, up, -T) is right-handed.
     m.makeBasis(r, u, t.negate());
     group.matrixAutoUpdate = false;
     group.matrix.copy(m);
@@ -225,7 +225,7 @@ class Game {
     corona.renderOrder = 3;
     egg.add(corona);
 
-    // Fala reakcji korowej rozchodząca się od punktu wniknięcia.
+    // Cortical reaction wave spreading from the point of entry.
     this.waveMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
       uniforms: { uHit: { value: new THREE.Vector3(0, 0, 1) }, uP: { value: -1 }, uHard: { value: 0 } },
@@ -241,7 +241,7 @@ class Game {
     this.halo = halo;
 
     track.point(track.eggS, 0, 0, egg.position);
-    // Szew półkul leży poziomo względem kierunku lotu, więc gracz patrzy na pełną kopułę.
+    // The hemisphere seam lies level with the direction of travel, so the player faces a full dome.
     egg.rotation.set(Math.PI / 2, 0.4, 0.2);
     this.scene.add(egg);
     this.egg = egg;
@@ -252,7 +252,7 @@ class Game {
   }
 
   buildParticles() {
-    // Drobiny w płynie: pozycje w przestrzeni toru, zawijane wokół kamery.
+    // Particles in the fluid: positions in track space, wrapped around the camera.
     const N = 1100;
     this.motes = { N, s: new Float32Array(N), a: new Float32Array(N), r: new Float32Array(N), pos: new Float32Array(N * 3) };
     const g = new THREE.BufferGeometry();
@@ -268,7 +268,7 @@ class Game {
       this.motes.r[i] = Math.sqrt(Math.random()) * 0.95;
     }
 
-    // Rozbryzgi po trafieniach.
+    // Splashes after hits.
     const B = 320;
     this.bursts = { B, next: 0, life: new Float32Array(B), vel: new Float32Array(B * 3), pos: new Float32Array(B * 3), col: new Float32Array(B * 3) };
     this.bursts.pos.fill(1e6);
@@ -300,7 +300,7 @@ class Game {
     const target = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 4 });
     this.composer = new EffectComposer(this.renderer, target);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    // Pojedynczy piksel NaN rozlałby się w bloomie na pół ekranu, więc czyścimy obraz przed poświatą.
+    // A single NaN pixel would spread across half the screen in the bloom pass, so clean the image first.
     this.composer.addPass(new ShaderPass({
       uniforms: { tDiffuse: { value: null } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
@@ -322,7 +322,7 @@ class Game {
     this.camera.updateProjectionMatrix();
   }
 
-  // ---------- Stany ----------
+  // ---------- States ----------
   makeRacers(botCount, withPlayer) {
     for (const p of this.pool) {
       p.mesh.visible = false;
@@ -375,7 +375,7 @@ class Game {
 
   startRace() {
     this.sound.start();
-    this.mouse.active = false; // kursor stoi na przycisku; sterowanie myszą zaczyna się od jej ruchu
+    this.mouse.active = false; // the cursor is on the button; mouse steering starts when it moves
     this.mode = 'countdown';
     this.resetWorld();
     const racers = this.makeRacers(this.botCount, true);
@@ -396,7 +396,7 @@ class Game {
 
   onWin(winner) {
     const { egg, track } = this;
-    // Kierunek uderzenia w układzie lokalnym jaja.
+    // Impact direction in the egg's local space.
     const { a } = this.tmp;
     track.point(winner.s, winner.x, winner.y, a);
     egg.worldToLocal(a).normalize();
@@ -463,7 +463,7 @@ class Game {
     $('pause').hidden = !pause;
   }
 
-  // ---------- Wejście ----------
+  // ---------- Input ----------
   setupInput() {
     this.keys = new Set();
     this.mouse = { x: 0, y: 0, active: false, down: false };
@@ -499,7 +499,7 @@ class Game {
     });
     window.addEventListener('pointerup', () => { this.mouse.down = false; });
 
-    // Dotyk: gałka i przycisk zrywu.
+    // Touch: stick and burst button.
     const stick = $('stick'), knob = $('knob');
     let stickId = null;
     const moveStick = (e) => {
@@ -525,7 +525,7 @@ class Game {
     let x = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
     let y = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
     if (x || y) { this.mouse.active = false; } else if (this.touch.x || this.touch.y) { x = this.touch.x; y = this.touch.y; } else if (this.mouse.active) {
-      // Mysz: ze strefą martwą i pełnym wychyleniem w połowie drogi do krawędzi.
+      // Mouse: with a dead zone and full deflection halfway to the screen edge.
       const mx = this.mouse.x * 1.9, my = this.mouse.y * 1.9;
       const l = Math.hypot(mx, my);
       if (l > 0.14) {
@@ -571,7 +571,7 @@ class Game {
     $('startBtn').textContent = t(`start.${state}`);
   }
 
-  // Napisy budowane w kodzie, które trzeba odświeżyć po zmianie języka.
+  // Text built in code, which needs refreshing after a language change.
   refreshLanguage() {
     this.setStartState(this.startState || 'loading');
     $('langCur').textContent = langName();
@@ -611,7 +611,7 @@ class Game {
     this.hudTimer -= dt;
     const { player, race, track } = this;
     if (!player) return;
-    // Pasek paliwa co klatkę, reszta 8 razy na sekundę.
+    // Fuel bar every frame, everything else 8 times per second.
     $('atpfill').style.transform = `scaleX(${player.energy / 100})`;
     if (this.hudTimer > 0) return;
     this.hudTimer = 0.12;
@@ -668,7 +668,7 @@ class Game {
     if (v.className !== cls) v.className = cls;
   }
 
-  // ---------- Efekty ----------
+  // ---------- Effects ----------
   splash(r, color, count) {
     const { a } = this.tmp;
     this.track.point(r.s, r.x, r.y, a);
@@ -723,7 +723,7 @@ class Game {
     }
   }
 
-  // ---------- Synchronizacja obiektów ze stanem ----------
+  // ---------- Syncing objects with state ----------
   syncRacers() {
     const { track, player, camera } = this;
     const { a, b, c, t, u, r: rv, m } = this.tmp;
@@ -736,7 +736,7 @@ class Game {
 
       track.point(r.s, r.x, r.y, mesh.position);
       track.frame(r.s, t, u, rv);
-      // Kierunek płynięcia = oś toru + prędkość boczna; główka prowadzi, ogonek ciągnie się za nią.
+      // Swim direction = track axis + sideways velocity; the head leads and the tail follows.
       const speed = Math.max(10, Math.abs(r.vs));
       a.copy(t).multiplyScalar(speed).addScaledVector(rv, r.vx).addScaledVector(u, r.vy).normalize();
       b.crossVectors(u, a).normalize();
@@ -796,7 +796,7 @@ class Game {
       if (!on) continue;
       w.mesh.userData.flash = Math.max(0, w.mesh.userData.flash - dt * 1.8);
       w.membrane.material.emissiveIntensity = 0.16 + w.mesh.userData.flash * 1.1;
-      // Błona blisko kamery rzednie, żeby nie zasłaniać widoku.
+      // The membrane thins out near the camera so it does not block the view.
       w.membrane.material.opacity = 0.08 + 0.34 * clamp((w.s - this.camS - 5) / 40, 0, 1);
     }
   }
@@ -807,13 +807,13 @@ class Game {
     const target = this.player || this.attractTarget;
     if (!target) return;
 
-    // Kamera wolno okrąża jajo po zakończeniu wyścigu.
+    // The camera slowly circles the egg after the race.
     if (this.mode === 'finish' || this.mode === 'results') {
       this.finishT = (this.finishT || 0) + dt;
       const winner = this.race.winner;
       const camS = track.eggS - EGG_R - 24;
       track.frame(camS, t, u, r);
-      // Powolny łuk przed jajem, cały czas wewnątrz tunelu.
+      // A slow arc in front of the egg, always inside the tunnel.
       const ang = this.finishT * 0.22 + 2.2;
       const orbit = Math.min(track.radius(camS) - 3, 13);
       const wp = this.tmp.d;
@@ -830,7 +830,7 @@ class Game {
 
     const back = this.mode === 'menu' ? 14 : 10.5 + clamp(target.vs / 60, 0, 1.2) * 2.4;
     const wantS = target.s - back;
-    // Kamera w przedbiegu podjeżdża z tyłu.
+    // Before the start the camera moves in from behind.
     this.camS += (wantS - this.camS) * (1 - Math.exp(-dt * (this.mode === 'countdown' ? 1.2 : 9)));
     const lim = Math.max(1, track.radius(this.camS) - 2.2);
     let wx = target.x * 0.78, wy = target.y * 0.78 + 3;
@@ -864,7 +864,7 @@ class Game {
     camera.updateProjectionMatrix();
   }
 
-  // ---------- Pętla ----------
+  // ---------- Loop ----------
   frame() {
     const now = performance.now();
     const raw = (now - this.last) / 1000;
@@ -904,7 +904,7 @@ class Game {
       }
     } else if (this.mode === 'menu') {
       race.update(dt);
-      // Pokaz w menu: kamera trzyma się aktualnego lidera, a po dopłynięciu zaczyna od nowa.
+      // Menu demo: the camera follows the current leader, and the race restarts after the finish.
       const leader = race.ranking()[0];
       if (leader && leader !== this.attractTarget && leader.s - this.attractTarget.s > 10) this.attractTarget = leader;
       if (race.winner && race.afterWin > 7) this.startAttract();
@@ -943,7 +943,7 @@ class Game {
     else this.renderer.render(this.scene, this.camera);
   }
 
-  // Gdy klatki są zbyt wolne, gra sama obniża jakość: najpierw rozdzielczość, potem poświatę.
+  // When frames are too slow the game lowers quality by itself: resolution first, then bloom.
   watchPerformance(raw) {
     if (raw > 0.5) return;
     this.fpsSamples.push(raw);
@@ -965,7 +965,7 @@ function cm(units, track) {
 }
 
 function fmtTime(sec) {
-  // Zaokrąglenie przed podziałem, żeby 9,96 s nie dało "0:010,0".
+  // Round before splitting, so 9.96 s does not become "0:010.0".
   const tenths = Math.round(sec * 10);
   const m = Math.floor(tenths / 600), s = (tenths - m * 600) / 10;
   return `${m}:${s < 10 ? '0' : ''}${decimal(s)}`;
@@ -985,7 +985,7 @@ function tickToast(dt) {
   }
 }
 
-// Wybór języka: pierwszy ekran przy pierwszej wizycie, później dostępny z menu.
+// Language picker: the first screen on the first visit, available from the menu later.
 function setupLanguage(game) {
   const saved = savedLang();
   setLang(saved || DEFAULT_LANG, { remember: false });

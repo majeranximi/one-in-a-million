@@ -1,4 +1,4 @@
-// Tłumaczenia gry. Nazwy własne botów i tytuły modeli celowo zostają bez zmian.
+// Game translations. Bot names and model titles stay unchanged on purpose.
 
 export const LANGS = [
   { code: 'cs', name: 'Čeština' },
@@ -346,7 +346,7 @@ export function langName(code = current) {
   return LANGS.find((l) => l.code === code).name;
 }
 
-// Język zapisany przy poprzedniej wizycie albo null, jeśli gracz jeszcze nie wybierał.
+// Language saved on a previous visit, or null if the player has not chosen one yet.
 export function savedLang() {
   try {
     const v = localStorage.getItem(STORE_KEY);
@@ -366,11 +366,11 @@ export function decimal(value) {
   return value.toFixed(1).replace('.', STRINGS[current].decimal);
 }
 
-// Ustawia język i przepisuje napisy ze strony (data-i18n, data-i18n-title, data-i18n-aria).
+// Sets the language and rewrites the page text (data-i18n, data-i18n-title, data-i18n-aria).
 export function setLang(code, { remember = true } = {}) {
   current = isLang(code) ? code : DEFAULT_LANG;
   if (remember) {
-    try { localStorage.setItem(STORE_KEY, current); } catch { /* język zostaje tylko na tę wizytę */ }
+    try { localStorage.setItem(STORE_KEY, current); } catch { /* the language only lasts for this visit */ }
   }
   document.documentElement.lang = current;
   document.title = `${t('title1')} ${t('title2')}`;

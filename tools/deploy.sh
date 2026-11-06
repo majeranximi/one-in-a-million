@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Buduje grę i publikuje dist/ na gałęzi gh-pages (GitHub Pages). Główna gałąź zostaje bez zmian.
+# Builds the game and publishes dist/ to the gh-pages branch (GitHub Pages). The main branch stays untouched.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -16,7 +16,7 @@ touch "$TMP/.nojekyll"
 
 git -C "$TMP" init -q -b gh-pages
 git -C "$TMP" add -A
-git -C "$TMP" -c user.name="$NAME" -c user.email="$EMAIL" commit -q -m "Publikacja gry"
+git -C "$TMP" -c user.name="$NAME" -c user.email="$EMAIL" commit -q -m "Publish game"
 git -C "$TMP" push -q -f "$REMOTE" gh-pages
 
-echo "Wysłano na gh-pages. Strona odświeży się po około minucie."
+echo "Pushed to gh-pages. The site updates in about a minute."

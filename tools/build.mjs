@@ -1,4 +1,4 @@
-// Składa grę do dist/: game.js (bundle z wbudowanymi modelami) i index.html.
+// Builds the game into dist/: game.js (bundle with embedded models) and index.html.
 import fs from 'node:fs';
 import { build } from 'esbuild';
 
@@ -28,4 +28,4 @@ ${page}
 </body>
 </html>
 `);
-console.log('dist gotowy:', (fs.statSync('dist/game.js').size / 1024).toFixed(0), 'kB game.js');
+console.log('dist ready:', (fs.statSync('dist/game.js').size / 1024).toFixed(0), 'kB game.js');

@@ -1,4 +1,4 @@
-// Symulacja wyścigu: pływacy, boty, przeszkody. Nie dotyka renderingu poza obiektami przekazanymi w hookach.
+// Race simulation: swimmers, bots, obstacles. It leaves rendering to the code behind the hooks.
 import { EGG_R } from './track.js';
 
 export const BASE_SPEED = 34;
@@ -80,7 +80,7 @@ export class Race {
       return [Math.cos(a) * r, Math.sin(a) * r];
     };
 
-    // Śluz w szyjce: błona z jednym lub dwoma otworami.
+    // Cervical mucus: a membrane with one or two holes.
     this.walls = [];
     const wallCount = 7;
     for (let i = 0; i < wallCount; i++) {
@@ -90,7 +90,7 @@ export class Race {
       const n = i >= 4 ? 1 : 2;
       const first = rnd() * Math.PI * 2;
       for (let h = 0; h < n; h++) {
-        // Dwa otwory leżą naprzeciw siebie i nigdy na siebie nie zachodzą.
+        // Two holes sit opposite each other and never overlap.
         const a = first + h * Math.PI;
         const r = R * (0.42 + rnd() * 0.16);
         holes.push({ x: Math.cos(a) * r, y: Math.sin(a) * r, r: 2.9 });
@@ -98,7 +98,7 @@ export class Race {
       this.walls.push({ s, holes });
     }
 
-    // Czerwone krwinki: dryfujące przeszkody, najgęściej w macicy.
+    // Red blood cells: drifting obstacles, densest in the uterus.
     this.obstacles = [];
     const addRbc = (from, to, count) => {
       for (let i = 0; i < count; i++) {
@@ -113,7 +113,7 @@ export class Race {
     addRbc(z[2].from, z[2].to, 10);
     addRbc(z[3].from, track.eggS - 60, 14);
 
-    // Wirusy: spowalniają i blokują przyspieszenie. W jajowodzie czyhają przy ścianach, na dobrej linii.
+    // Viruses: slow you down and block bursts. In the fallopian tube they lurk near the walls, on the fast line.
     const addVirus = (from, to, count, wall) => {
       for (let i = 0; i < count; i++) {
         const s = from + rnd() * (to - from);
@@ -129,7 +129,7 @@ export class Race {
     addVirus(z[3].from + 20, track.eggS - 70, 12, false);
     this.obstacles.sort((a, b) => a.s - b.s);
 
-    // Leukocyty polują na pływaków.
+    // White blood cells hunt the swimmers.
     this.hunters = [];
     const addHunter = (s, wide) => {
       const R = track.maxRadius(s);
@@ -144,13 +144,13 @@ export class Race {
     addHunter(z[3].from + 240, true);
     for (const h of this.hunters) { h.x0 = h.x; h.y0 = h.y; h.s0 = h.s; }
 
-    // Fruktoza (paliwo) i rzadka hiperaktywacja.
+    // Fructose (fuel) and the rare hyperactivation.
     this.pickups = [];
     const addPickup = (s, x, y, kind) => this.pickups.push({ s, x, y, kind, timer: 0, phase: rnd() * 6.28 });
     for (let s = 70; s < track.eggS - 60; s += 26 + rnd() * 26) {
       const [x, y] = spot(s, 0.8);
       const zone = track.zoneIndex(s);
-      // W jajowodzie paliwo leży przy ścianie, żeby nagradzać dobrą linię.
+      // In the fallopian tube fuel sits near the wall, to reward the fast line.
       if (zone === 2) {
         const a = rnd() * 6.28, R = track.maxRadius(s) * 0.76;
         addPickup(s, Math.cos(a) * R, Math.sin(a) * R, 'fructose');
@@ -222,7 +222,7 @@ export class Race {
     r.blocked = Math.max(0, r.blocked - dt);
 
     if (r.finished) {
-      // Zwycięzca powoli wnika przez osłonki, a ogonek bije coraz wolniej.
+      // The winner slowly enters through the egg's layers while the tail beats slower and slower.
       const ds = track.eggS - r.s;
       if (Math.hypot(ds, r.x, r.y) > EGG_R * 0.62) {
         const k = 1 - dt * 0.22;
@@ -258,7 +258,7 @@ export class Race {
     if (r.boosting) target += BOOST_SPEED;
     if (r.hyper > 0) target += HYPER_SPEED;
 
-    // Prąd rzęsek: mocny na środku jajowodu, prawie żaden przy ścianie.
+    // Ciliary current: strong in the middle of the fallopian tube, almost none near the wall.
     r.inCurrent = false;
     if (zone === 2 && r.hyper <= 0) {
       const c = 1 - clamp(lat / R, 0, 1);
@@ -267,7 +267,7 @@ export class Race {
       r.inCurrent = push > 0.35;
     }
 
-    // Tunel aerodynamiczny za innym pływakiem.
+    // Slipstream behind another swimmer.
     r.drafting = false;
     for (const o of this.racers) {
       if (o === r || o.finished || o.eatenBy) continue;
@@ -292,7 +292,7 @@ export class Race {
 
     r.waveT += dt * (5 + Math.abs(r.vs) * 0.44 + (r.boosting ? 8 : 0));
 
-    // Ściana toru.
+    // Track wall.
     const rm = track.maxRadius(r.s);
     const l2 = Math.hypot(r.x, r.y);
     if (l2 > rm) {
@@ -315,7 +315,7 @@ export class Race {
     if (r.s < 3) r.s = 3;
   }
 
-  // Delikatna pomoc: boty zbyt daleko za graczem doganiają, zbyt daleko przed nim czekają.
+  // Gentle balancing: bots far behind the player catch up, bots far ahead ease off.
   rubberBand(r) {
     const player = this.racers.find((p) => p.isPlayer);
     if (!player || !this.difficulty.help) return 1;
@@ -391,7 +391,7 @@ export class Race {
     const { track } = this;
     const ds = track.eggS - r.s;
     const lat = Math.hypot(r.x, r.y);
-    // Lejek przed jajem: nie da się go minąć bokiem.
+    // Funnel in front of the egg: it cannot be passed on the side.
     if (ds < 50) {
       const lim = EGG_R * 0.85 + Math.max(0, ds) * 0.32;
       if (lat > lim) { r.x *= lim / lat; r.y *= lim / lat; }
@@ -405,12 +405,12 @@ export class Race {
       r.finishTime = this.time;
       this.state = 'won';
       this.afterWin = 0;
-      // Kolejność i dystanse zamrożone w chwili zwycięstwa; później wszyscy i tak dopływają pod osłonkę.
+      // Order and distances are frozen at the moment of victory; everyone reaches the shell later anyway.
       this.finalOrder = this.racers.slice().sort((a, b) => (a === r ? -1 : b === r ? 1 : b.s - a.s));
       for (const x of this.racers) x.finalS = x.s;
       this.hooks.onWin?.(r);
     } else if (!r.finished && r.blocked <= 0) {
-      // Reakcja korowa: osłonka jest już twarda, spóźnialscy odbijają się.
+      // Cortical reaction: the shell is already hard, so latecomers bounce off.
       r.blocked = 0.5;
       r.vs = -22;
       this.hooks.onBounced?.(r);
@@ -477,7 +477,7 @@ export class Race {
       }
       h.prey = prey;
       if (prey) {
-        // Goni: boczna pogoń jest szybka, po osi toru wolniejsza od pływaka, więc da się uciec.
+        // Chase: fast sideways, but slower than a swimmer along the track, so escape is possible.
         const lateral = h.wide ? 15 : 11;
         const dx = prey.x - h.x, dy = prey.y - h.y, l = Math.hypot(dx, dy) || 1;
         const st = Math.min(lateral * dt, l);
@@ -491,7 +491,7 @@ export class Race {
           this.hooks.onEaten?.(prey, h);
         }
       } else {
-        // Patrol wokół posterunku.
+        // Patrol around its post.
         const t = this.time * 0.35 + h.phase;
         const R = track.maxRadius(h.s) * (h.wide ? 0.55 : 0.3);
         const gx = Math.cos(t) * R, gy = Math.sin(t * 1.3) * R;
@@ -514,12 +514,12 @@ export class Race {
     this.hooks.onReleased?.(r);
   }
 
-  // Gracz może przyspieszyć ucieczkę z leukocyta, klikając przyspieszenie.
+  // The player can escape a white blood cell faster by tapping burst.
   struggle(r) {
     if (r.eatenBy) r.eatenT -= 0.16;
   }
 
-  // ---------- BOTY ----------
+  // ---------- BOTS ----------
   botThink(r, dt) {
     if (r.finished || r.eatenBy) { r.input.x = 0; r.input.y = 0; r.input.boost = false; return; }
     const { difficulty } = this;
@@ -543,21 +543,21 @@ export class Race {
     const R = track.maxRadius(r.s + look * 0.6);
     const err = difficulty.error;
 
-    // Pas ruchu: bot trzyma swoją linię, która wolno się przesuwa.
+    // Lane: each bot keeps its own slowly shifting line.
     r.lane += 0.02 * Math.sin(r.index + this.time * 0.3);
     let lf = r.laneR;
     if (zone === 2) lf = 0.72 + 0.14 * Math.sin(r.index * 1.7 + this.time * 0.2) - err * 0.05;
     let tx = Math.cos(r.lane) * R * lf;
     let ty = Math.sin(r.lane) * R * lf;
 
-    // W bańce ciągnie do jaja.
+    // In the ampulla, head for the egg.
     const toEgg = track.eggS - r.s;
     if (toEgg < 150) {
       const f = clamp(1 - toEgg / 150, 0, 1);
       tx *= 1 - f; ty *= 1 - f;
     }
 
-    // Śluz: celuj w najbliższy otwór.
+    // Mucus: aim for the nearest hole.
     let targetLocked = false;
     for (const w of this.walls) {
       const ds = w.s - r.s;
@@ -574,7 +574,7 @@ export class Race {
       }
     }
 
-    // Paliwo: skręć, jeśli jest blisko linii.
+    // Fuel: turn towards it if it is close to the line.
     if (!targetLocked && r.energy < 80) {
       const list = this.pickups;
       let best = null, bs = 1e9;
@@ -588,7 +588,7 @@ export class Race {
       if (best) { tx = best.x; ty = best.y; }
     }
 
-    // Omijanie: odepchnij cel od tego, co jest na kursie.
+    // Avoidance: push the target away from whatever is on course.
     let danger = 0;
     const avoid = (ox, oy, rad, ds) => {
       const t = clamp(ds / look, 0, 1);
@@ -622,7 +622,7 @@ export class Race {
     if (tl > rm) { tx *= rm / tl; ty *= rm / tl; }
     r.tx = tx; r.ty = ty;
 
-    // Przyspieszenie: krótkie zrywy, finisz na całego, ucieczka przed leukocytem.
+    // Boosting: short bursts, an all-out finish, and escaping from white blood cells.
     r.burstCheck -= 0.09;
     if (r.burstCheck <= 0) {
       r.burstCheck = 1 + Math.random() * 2;

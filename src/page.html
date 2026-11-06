@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Unbounded:wght@500;800;900&display=swap">
 <style>
-/* Układ: scena 3D na całym ekranie, interfejs jak odczyt z mikroskopu nałożony na żywy obraz. */
+/* Layout: full-screen 3D scene with the interface laid over it like a microscope readout. */
 :root {
   color-scheme: dark;
   --ink: #fff3ea;
@@ -22,7 +22,7 @@
 }
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; overflow: hidden; background: var(--blood); color: var(--ink); font-family: var(--body); }
-/* Gra steruje przeciąganiem i klikaniem, więc tekst nie może się przy tym zaznaczać. */
+/* The game is controlled by dragging and clicking, so text must not get selected along the way. */
 html { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -80,7 +80,7 @@ a { color: var(--ovum); }
 #knob { position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px; border-radius: 50%; background: rgba(255, 240, 230, .5); }
 #boostbtn { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); bottom: calc(92px + env(safe-area-inset-bottom, 0px)); width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--ovum); background: rgba(255, 190, 110, .24); font-weight: 700; pointer-events: auto; touch-action: none; }
 
-/* ---- Ekrany ---- */
+/* ---- Screens ---- */
 .screen { position: fixed; inset: 0; overflow-y: auto; padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; align-items: center; }
 #menu, #lang { background: linear-gradient(90deg, rgba(24, 2, 8, .9) 0%, rgba(24, 2, 8, .66) 42%, rgba(24, 2, 8, 0) 74%); }
 .col { width: min(560px, 100%); margin-left: clamp(0px, 5vw, 80px); display: flex; flex-direction: column; gap: 20px; }
@@ -133,14 +133,14 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
 @media (prefers-reduced-motion: reduce) { .cta { transition: none; } #toast, #vignette { transition: none; } }
 </style>
 
-<canvas id="scene" aria-label="Scena wyścigu 3D" data-i18n-aria="hud.scene"></canvas>
+<canvas id="scene" aria-label="3D race scene" data-i18n-aria="hud.scene"></canvas>
 <div id="vignette"></div>
 
 <div id="hud" hidden>
   <div id="progress">
     <div id="zones"></div>
     <div id="ticks"></div>
-    <div id="eggmark" title="Jajo" data-i18n-title="hud.egg"></div>
+    <div id="eggmark" title="Egg" data-i18n-title="hud.egg"></div>
   </div>
   <div id="mid">
     <div>
@@ -155,8 +155,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
       <div id="atpbar"><div id="atpfill"></div></div>
     </div>
     <div id="readout" class="num">
-      <strong id="speed">0,0 mm/min</strong>
-      <span id="left">do jaja 18,0 cm</span>
+      <strong id="speed">0.0 mm/min</strong>
+      <span id="left">18.0 cm to the egg</span>
     </div>
   </div>
 </div>
@@ -164,31 +164,31 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
 <div id="count" hidden></div>
 <div id="touch" hidden>
   <div id="stick"><div id="knob"></div></div>
-  <button id="boostbtn" type="button" data-i18n="hud.boost">ZRYW</button>
+  <button id="boostbtn" type="button" data-i18n="hud.boost">BURST</button>
 </div>
 
 <section id="lang" class="screen" hidden>
   <div class="col">
-    <h2 data-i18n="pick">Wybierz język</h2>
+    <h2 data-i18n="pick">Choose your language</h2>
     <div id="langList" class="langs"></div>
   </div>
 </section>
 
 <section id="menu" class="screen">
   <div class="col">
-    <h1><span data-i18n="title1">Jeden z</span> <em data-i18n="title2">Milionów</em></h1>
-    <p class="lead" data-i18n="lead">Startuje około 250 milionów. Do jaja dociera kilkaset. Zapładnia dokładnie jeden. Płyń przez śluz, leukocyty i prąd rzęsek, zanim osłonka się zamknie.</p>
+    <h1><span data-i18n="title1">One in a</span> <em data-i18n="title2">Million</em></h1>
+    <p class="lead" data-i18n="lead">About 250 million set off. A few hundred reach the egg. Exactly one fertilizes it. Swim through mucus, white blood cells and the ciliary current before the egg seals itself.</p>
     <div class="opts">
       <fieldset>
-        <legend data-i18n="level">Poziom</legend>
+        <legend data-i18n="level">Level</legend>
         <div class="seg" id="diffSeg">
-          <button type="button" id="d-easy" data-v="easy" aria-pressed="false" data-i18n="diff.easy">Łatwy</button>
-          <button type="button" id="d-normal" data-v="normal" aria-pressed="true" data-i18n="diff.normal">Normalny</button>
-          <button type="button" id="d-hard" data-v="hard" aria-pressed="false" data-i18n="diff.hard">Trudny</button>
+          <button type="button" id="d-easy" data-v="easy" aria-pressed="false" data-i18n="diff.easy">Easy</button>
+          <button type="button" id="d-normal" data-v="normal" aria-pressed="true" data-i18n="diff.normal">Normal</button>
+          <button type="button" id="d-hard" data-v="hard" aria-pressed="false" data-i18n="diff.hard">Hard</button>
         </div>
       </fieldset>
       <fieldset>
-        <legend data-i18n="bots">Boty</legend>
+        <legend data-i18n="bots">Bots</legend>
         <div class="seg" id="botSeg">
           <button type="button" id="b-5" data-v="5" aria-pressed="false">5</button>
           <button type="button" id="b-11" data-v="11" aria-pressed="true">11</button>
@@ -196,26 +196,26 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
         </div>
       </fieldset>
     </div>
-    <button id="startBtn" class="cta" type="button" disabled>Ładuję modele…</button>
+    <button id="startBtn" class="cta" type="button" disabled>Loading models…</button>
     <dl class="keys desktop">
-      <dt data-i18n="keys.steerK">WASD, strzałki lub mysz</dt><dd data-i18n="keys.steer">sterowanie</dd>
-      <dt data-i18n="keys.boostK">Spacja, Shift lub lewy przycisk</dt><dd data-i18n="keys.boost">zryw za ATP (zbieraj fruktozę)</dd>
-      <dt data-i18n="keys.pauseK">P / Esc, M</dt><dd data-i18n="keys.pause">pauza, dźwięk</dd>
+      <dt data-i18n="keys.steerK">WASD, arrow keys or mouse</dt><dd data-i18n="keys.steer">steer</dd>
+      <dt data-i18n="keys.boostK">Space, Shift or left button</dt><dd data-i18n="keys.boost">burst, costs ATP (collect fructose)</dd>
+      <dt data-i18n="keys.pauseK">P / Esc, M</dt><dd data-i18n="keys.pause">pause, sound</dd>
     </dl>
     <div class="meta">
       <span id="best" class="num"></span>
-      <button id="creditsBtn" class="link" type="button" data-i18n="credits.title">Modele i autorzy</button>
-      <button id="langBtn" class="link" type="button"><span data-i18n="language">Język</span>: <span id="langCur"></span></button>
+      <button id="creditsBtn" class="link" type="button" data-i18n="credits.title">Models and authors</button>
+      <button id="langBtn" class="link" type="button"><span data-i18n="language">Language</span>: <span id="langCur"></span></button>
     </div>
   </div>
 </section>
 
 <section id="pause" class="screen" hidden>
   <div class="card">
-    <h2 data-i18n="pause.title">Pauza</h2>
+    <h2 data-i18n="pause.title">Paused</h2>
     <div class="row">
-      <button id="resumeBtn" class="cta" type="button" data-i18n="pause.resume">Płyń dalej</button>
-      <button id="quitBtn" class="quiet" type="button" data-i18n="pause.quit">Wyjdź do menu</button>
+      <button id="resumeBtn" class="cta" type="button" data-i18n="pause.resume">Keep swimming</button>
+      <button id="quitBtn" class="quiet" type="button" data-i18n="pause.quit">Quit to menu</button>
     </div>
   </div>
 </section>
@@ -227,7 +227,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
     <ol id="table"></ol>
     <p id="fact"></p>
     <div class="row">
-      <button id="againBtn" class="cta" type="button" data-i18n="results.again">Jeszcze raz</button>
+      <button id="againBtn" class="cta" type="button" data-i18n="results.again">Race again</button>
       <button id="menuBtn" class="quiet" type="button" data-i18n="results.menu">Menu</button>
     </div>
   </div>
@@ -235,14 +235,14 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
 
 <section id="credits" class="screen" hidden>
   <div class="card">
-    <h2 data-i18n="credits.title">Modele i autorzy</h2>
+    <h2 data-i18n="credits.title">Models and authors</h2>
     <ul>
-      <li><span data-i18n="credits.sperm">Plemnik i warstwy komórki jajowej</span>: Julio Hidalgo, <a href="https://tactiles.eu/tactiles/sperm-cell/" target="_blank" rel="noopener">Sperm cell</a>, <a href="https://tactiles.eu/tactiles/human-egg-cell/" target="_blank" rel="noopener">Human egg cell</a>, Tactiles.eu, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <span data-i18n="credits.changes">Zmiany: redukcja siatki, wyprostowany ogonek, półkule złożone w kule.</span></li>
-      <li><span data-i18n="credits.wbc">Biała krwinka i wirus</span>: Poly by Google, <a href="https://poly.pizza/m/aoZ4DjiO35h" target="_blank" rel="noopener">White blood cell</a>, <a href="https://poly.pizza/m/d_QDWsT0kBG" target="_blank" rel="noopener">Virus</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
-      <li><span data-i18n="credits.rbc">Czerwona krwinka</span>: William Smith, <a href="https://poly.pizza/m/0QFzCaYkqy_" target="_blank" rel="noopener">Healthy Red Blood Cell</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
+      <li><span data-i18n="credits.sperm">Sperm cell and egg cell layers</span>: Julio Hidalgo, <a href="https://tactiles.eu/tactiles/sperm-cell/" target="_blank" rel="noopener">Sperm cell</a>, <a href="https://tactiles.eu/tactiles/human-egg-cell/" target="_blank" rel="noopener">Human egg cell</a>, Tactiles.eu, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <span data-i18n="credits.changes">Changes: reduced mesh, straightened tail, hemispheres joined into spheres.</span></li>
+      <li><span data-i18n="credits.wbc">White blood cell and virus</span>: Poly by Google, <a href="https://poly.pizza/m/aoZ4DjiO35h" target="_blank" rel="noopener">White blood cell</a>, <a href="https://poly.pizza/m/d_QDWsT0kBG" target="_blank" rel="noopener">Virus</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
+      <li><span data-i18n="credits.rbc">Red blood cell</span>: William Smith, <a href="https://poly.pizza/m/0QFzCaYkqy_" target="_blank" rel="noopener">Healthy Red Blood Cell</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
     </ul>
-    <p data-i18n="credits.engine">Silnik: three.js (MIT). Tunel, cząsteczki i dźwięk są generowane w kodzie gry.</p>
-    <div class="row"><button id="closeCredits" class="quiet" type="button" data-i18n="credits.close">Zamknij</button></div>
+    <p data-i18n="credits.engine">Engine: three.js (MIT). The tunnel, particles and sound are generated by the game code.</p>
+    <div class="row"><button id="closeCredits" class="quiet" type="button" data-i18n="credits.close">Close</button></div>
   </div>
 </section>
 

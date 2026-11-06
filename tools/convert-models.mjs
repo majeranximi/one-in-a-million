@@ -1,6 +1,6 @@
-// Zamienia pobrane modele (STL do druku 3D z Tactiles.eu, GLB z Poly Pizza) na lekkie GLB do gry.
-//  - plemnik: redukcja siatki, wyprostowanie ogonka wzdłuż -Z (fale dodaje shader), zagęszczenie ogonka
-//  - jajo: z półkul-misek bierze zewnętrzną powierzchnię, odbija lustrzanie i normalizuje do promienia 1
+// Converts the downloaded models (3D-printing STL from Tactiles.eu, GLB from Poly Pizza) into light GLB files for the game.
+//  - sperm: reduces the mesh, straightens the tail along -Z (the shader adds the waves), adds tail density
+//  - egg: takes the outer surface of the bowl-shaped hemispheres, mirrors it and normalizes to radius 1
 import fs from 'node:fs';
 import path from 'node:path';
 import { Document, NodeIO } from '@gltf-transform/core';
@@ -36,7 +36,7 @@ function weld(soup, eps = 1e-6) {
   return { pos: new Float32Array(pos), idx };
 }
 
-// target = docelowa liczba trójkątów
+// target = desired triangle count
 function simplify({ pos, idx }, target, error = 0.02) {
   if (target * 3 >= idx.length) return compact(pos, idx);
   const [out] = Simplifier.simplify(idx, pos, 3, target * 3, error, []);
@@ -75,7 +75,7 @@ function smoothNormals(pos, idx) {
   return n;
 }
 
-// Czerwono-zielony podział krawędzi dłuższych niż limit (bez pęknięć w siatce).
+// Red-green subdivision of edges longer than the limit (leaves no cracks in the mesh).
 function subdivide({ pos, idx }, limitFor) {
   const p = Array.from(pos);
   let tris = Array.from(idx);
@@ -131,17 +131,17 @@ async function writeGlb(name, parts) {
   const file = path.join(OUT, name);
   await new NodeIO().write(file, doc);
   const tris = parts.reduce((t, x) => t + (x.idx ? x.idx.length : x.pos.length / 3) / 3, 0);
-  console.log(name, 'trójkąty:', tris, 'rozmiar:', (fs.statSync(file).size / 1024).toFixed(0), 'kB');
+  console.log(name, 'triangles:', tris, 'size:', (fs.statSync(file).size / 1024).toFixed(0), 'kB');
 }
 
-// ---------- PLEMNIK ----------
+// ---------- SPERM ----------
 async function sperm() {
   const welded = weld(readStl('SpermCell_Complete.stl'));
   const low = simplify(welded, 3500, 0.006);
   const P = low.pos;
   const count = P.length / 3;
 
-  // Główka leży na końcu o najmniejszym x+y, czubek ogonka na największym.
+  // The head sits at the end with the smallest x+y, the tail tip at the largest.
   let headTip = 0, tailTip = 0;
   for (let i = 0; i < count; i++) {
     const v = P[i * 3] + P[i * 3 + 1];
@@ -153,7 +153,7 @@ async function sperm() {
   const len = Math.hypot(ax0, ay0);
   const ax = ax0 / len, ay = ay0 / len;
 
-  // w = odległość wzdłuż osi główka→ogonek (0..1), l = wychylenie w bok, h = grubość
+  // w = distance along the head-to-tail axis (0..1), l = sideways offset, h = thickness
   const w = new Float32Array(count), l = new Float32Array(count), h = new Float32Array(count);
   for (let i = 0; i < count; i++) {
     const dx = P[i * 3] - hx, dy = P[i * 3 + 1] - hy;
@@ -162,7 +162,7 @@ async function sperm() {
     h[i] = P[i * 3 + 2] / len;
   }
 
-  // Linia środkowa z oryginalnych, gęstych wierzchołków: zdejmujemy wypalone na stałe esy-floresy.
+  // Centerline from the original dense vertices, used to remove the curves baked into the model.
   const BINS = 120;
   const sum = new Float64Array(BINS), cnt = new Float64Array(BINS);
   const W = welded.pos;
@@ -185,30 +185,30 @@ async function sperm() {
     return center[i] + (center[i + 1] - center[i]) * (f - i);
   };
 
-  // Główka to pierwsze ~12% długości. Środek układu = środek główki, przód = +Z.
+  // The head is the first ~12% of the length. Origin = center of the head, forward = +Z.
   const headCenterW = 0.055;
   const headLine = lineAt(headCenterW);
   const out = new Float32Array(P.length);
   for (let i = 0; i < count; i++) {
     const t = w[i];
     const offset = lineAt(t);
-    // Na główce trzymamy stałe przesunięcie, żeby jej nie ścinać.
+    // The head keeps a constant offset so it does not get sheared.
     const blend = Math.min(1, Math.max(0, (t - 0.1) / 0.06));
     const shift = headLine + (offset - headLine) * blend;
-    // Ogonek pogrubiony, żeby było go widać z kamery; czubek zostaje cienki.
+    // The tail is thickened so the camera can see it; the tip stays thin.
     const fat = 1 + 0.9 * Math.min(1, Math.max(0, (t - 0.14) / 0.1));
     out[i * 3] = (l[i] - shift) * fat;
     out[i * 3 + 1] = h[i] * fat;
     out[i * 3 + 2] = -(t - headCenterW);
   }
 
-  // Zagęszczenie ogonka, żeby fala w shaderze nie łamała się na długich krawędziach.
+  // Denser tail, so the shader wave does not kink on long edges.
   const dense = subdivide({ pos: out, idx: low.idx }, (z) => (z < -0.07 ? 0.016 : 1));
   const normal = smoothNormals(dense.pos, dense.idx);
   await writeGlb('sperm.glb', [{ name: 'sperm', pos: dense.pos, idx: dense.idx, normal }]);
 }
 
-// ---------- JAJO ----------
+// ---------- EGG ----------
 function shellOf(file, { flat = false, target = 0 } = {}) {
   const soup = readStl(file);
   const min = [1e9, 1e9, 1e9], max = [-1e9, -1e9, -1e9];
@@ -219,7 +219,7 @@ function shellOf(file, { flat = false, target = 0 } = {}) {
   const R = Math.min(max[0] - min[0], max[1] - min[1]) / 2;
   const cx = (min[0] + max[0]) / 2, cy = (min[1] + max[1]) / 2, cz = min[2] + R;
 
-  // Zostawiamy tylko zewnętrzną stronę miski, poniżej płaszczyzny cięcia (bez kołnierza, wypustek i brajla).
+  // Keep only the outer side of the bowl, below the cut plane (no rim, tabs or braille).
   const kept = [];
   for (let i = 0; i < soup.length; i += 9) {
     const t = soup.subarray(i, i + 9);
@@ -243,7 +243,7 @@ function shellOf(file, { flat = false, target = 0 } = {}) {
     half = s;
   }
 
-  // Lustro względem z=0 (odwrócona kolejność wierzchołków).
+  // Mirror across z=0 (with reversed vertex order).
   const n = half.length / 9;
   const pos = new Float32Array(n * 18);
   pos.set(half, 0);
@@ -272,7 +272,7 @@ async function egg() {
   const corona = shellOf('HumanEggCell_IsolatedCoronaRadiata.stl', { flat: true });
   const zona = shellOf('HumanEggCell_IsolatedZonaPellucida.stl', { target: 2500 });
   const cyto = shellOf('HumanEggCell_IsolatedCytoplasm.stl', { target: 2500 });
-  console.log('promienie warstw', corona.R, zona.R, cyto.R);
+  console.log('layer radii', corona.R, zona.R, cyto.R);
   const scale = (part) => {
     const k = part.R / corona.R;
     for (let i = 0; i < part.pos.length; i++) part.pos[i] *= k;
@@ -288,4 +288,4 @@ async function egg() {
 await sperm();
 await egg();
 for (const f of ['WhiteBloodCell.glb', 'RedBloodCell.glb', 'Virus.glb']) fs.copyFileSync(path.join(RAW, f), path.join(OUT, f));
-console.log('Gotowe:', fs.readdirSync(OUT).join(', '));
+console.log('Done:', fs.readdirSync(OUT).join(', '));

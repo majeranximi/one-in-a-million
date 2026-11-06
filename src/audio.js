@@ -1,4 +1,4 @@
-// Cały dźwięk jest syntezowany w Web Audio, bez plików. Startuje po pierwszym kliknięciu.
+// All sound is synthesized with Web Audio, with no files. It starts on the first click.
 export class Sound {
   constructor() {
     this.ctx = null;
@@ -19,7 +19,7 @@ export class Sound {
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 
-    // Szum płynu, którego jasność rośnie z prędkością.
+    // Fluid noise that gets brighter with speed.
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
     src.loop = true;
@@ -44,7 +44,7 @@ export class Sound {
     if (!ctx) return;
     this.flowFilter.frequency.setTargetAtTime(220 + speedNorm * 700 + (boosting ? 1200 : 0), ctx.currentTime, 0.12);
     this.flowGain.gain.setTargetAtTime(0.07 + speedNorm * 0.1 + (boosting ? 0.09 : 0), ctx.currentTime, 0.12);
-    // Bicie serca przyspiesza, gdy jesteś blisko jaja lub leukocyta.
+    // The heartbeat speeds up near the egg or a white blood cell.
     const interval = tense ? 0.56 : 0.92;
     while (this.nextBeat < ctx.currentTime + 0.1) {
       this.thump(this.nextBeat, 0.42);

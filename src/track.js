@@ -1,5 +1,5 @@
-// Tor: krzywa 3D z ramkami, profil promienia, strefy anatomiczne i siatka ścian.
-// Fizyka działa w "przestrzeni toru": s (metry wzdłuż osi) oraz x, y (przekrój poprzeczny).
+// Track: 3D curve with frames, radius profile, anatomical zones and wall mesh.
+// Physics runs in "track space": s (units along the axis) plus x, y (cross-section).
 import * as THREE from 'three';
 
 const CONTROL = [
@@ -15,7 +15,7 @@ function smooth(t) {
   return x * x * (3 - 2 * x);
 }
 
-// Prosty szum wartości 2D (powtarzalny, bez zależności).
+// Simple 2D value noise (repeatable, no dependencies).
 function noise2(x, y) {
   const hash = (a, b) => {
     const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
@@ -47,7 +47,7 @@ export class Track {
       const u = Math.min(1, i / this.length);
       curve.getPointAt(u, p);
       curve.getTangentAt(u, t).normalize();
-      // Transport równoległy: "góra" nie obraca się bez potrzeby, więc sterowanie jest stałe na ekranie.
+      // Parallel transport: "up" never rotates needlessly, so steering stays consistent on screen.
       up.addScaledVector(t, -up.dot(t)).normalize();
       right.crossVectors(t, up).normalize();
       p.toArray(this.P, i * 3); t.toArray(this.T, i * 3); up.toArray(this.U, i * 3); right.toArray(this.Rt, i * 3);
@@ -85,12 +85,12 @@ export class Track {
     return this.Rad[i] + (this.Rad[i + 1] - this.Rad[i]) * (f - i);
   }
 
-  // Maksymalne wychylenie pływaka od osi w danym miejscu.
+  // Maximum distance a swimmer can be from the axis at this point.
   maxRadius(s) {
     return Math.max(1, this.radius(s) - 1.3);
   }
 
-  // Punkt świata dla współrzędnych toru.
+  // World point for track coordinates.
   point(s, x, y, out) {
     const f = Math.min(this.count - 1.001, Math.max(0, s));
     const i = Math.floor(f), a = f - i, j = i * 3, q = j + 3;
@@ -114,7 +114,7 @@ export class Track {
     mix(this.T, j, t); mix(this.U, j, u); mix(this.Rt, j, r);
   }
 
-  // Fałdy ściany: inne w każdej strefie, tak jak w anatomii.
+  // Wall folds: different in each zone, as in real anatomy.
   wallRelief(s, theta) {
     const w = (from, to, soft = 40) => smooth((s - from + soft) / (2 * soft)) * (1 - smooth((s - to + soft) / (2 * soft)));
     const [a, b, c, d] = this.zones;
@@ -178,7 +178,7 @@ export class Track {
     g.setAttribute('aS', new THREE.BufferAttribute(sAttr, 1));
     g.setIndex(new THREE.BufferAttribute(idx, 1));
     g.computeVertexNormals();
-    // Szew: pierwszy i ostatni wierzchołek pierścienia muszą mieć tę samą normalną, inaczej perystaltyka rozchyla ścianę.
+    // Seam: the first and last ring vertex must share a normal, or peristalsis opens a crack in the wall.
     const nrm = g.attributes.normal;
     for (let i = 0; i < rings; i++) {
       const a = i * (SEG + 1), b = a + SEG;
@@ -193,7 +193,7 @@ export class Track {
   }
 }
 
-// Tekstura wilgotnej tkanki: plamki i naczynka, rysowane proceduralnie.
+// Wet tissue texture: spots and blood vessels, drawn procedurally.
 export function tissueTexture() {
   const size = 512;
   const cv = document.createElement('canvas');
