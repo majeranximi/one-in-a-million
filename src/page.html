@@ -22,6 +22,8 @@
 }
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; overflow: hidden; background: var(--blood); color: var(--ink); font-family: var(--body); }
+/* Gra steruje przeciąganiem i klikaniem, więc tekst nie może się przy tym zaznaczać. */
+html { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--sperm); outline-offset: 2px; }
