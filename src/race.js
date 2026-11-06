@@ -10,12 +10,6 @@ const LATERAL_ACCEL = 62;
 const LATERAL_DAMP = 3.4;
 export const RACER_RADIUS = 0.95;
 
-const BOT_NAMES = [
-  'Zenek Rakieta', 'Mirek 3000', 'Waldek Ogon', 'Stefan Pod Prąd', 'Kaziu Turbo', 'Bogdan Bez Hamulca',
-  'Sławek Spóźnialski', 'Romek Prawie', 'Heniek Zakręt', 'Zdzisiek Sprint', 'Januszek', 'Dawid Dziesiątka',
-  'Rysiek Wić', 'Tadek Fruktoza', 'Ignacy Akrosom', 'Lechu Reotaksja', 'Maniek Mitochondrium', 'Gienek Haploid', 'Olek Chromatyda',
-];
-
 export const DIFFICULTY = {
   easy: { skill: [0.8, 0.88], error: 2.2, boostUse: 0.45, help: 1 },
   normal: { skill: [0.88, 0.95], error: 1.2, boostUse: 0.7, help: 0.5 },
@@ -633,8 +627,4 @@ export class Race {
     const finalSprint = toEgg < 170 && r.energy > 3;
     r.input.boost = (r.burst > 0 || finalSprint || (chased && r.energy > 10)) && danger < 0.75;
   }
-}
-
-export function makeBotName(i) {
-  return BOT_NAMES[i % BOT_NAMES.length];
 }

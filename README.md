@@ -24,7 +24,7 @@ Swimming right behind a rival gives you extra speed, and the rare hyperactivatio
 
 ## Languages
 
-The game is available in Czech, Italian, German, English, Polish, Slovak and Russian. English is the default. The first visit starts with a language picker, and the language can be changed later from the menu. Translations live in `src/i18n.js`. Bot names are proper names and stay the same in every language.
+The game is available in Czech, Italian, German, English, Polish, Slovak and Russian. English is the default. The first visit starts with a language picker, and the language can be changed later from the menu. Translations live in `src/i18n.js`, including a separate set of bot names for each language.
 
 ## Running locally
 

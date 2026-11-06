@@ -1,6 +1,7 @@
 // Quick test without a browser: autopilot as the player against bots, with a fixed time step.
 import { Track } from '../src/track.js';
-import { Race, Racer, DIFFICULTY, makeBotName } from '../src/race.js';
+import { Race, Racer, DIFFICULTY } from '../src/race.js';
+import { botName } from '../src/i18n.js';
 
 const track = new Track();
 console.log('track length', track.length.toFixed(0), 'egg at', track.eggS.toFixed(0));
@@ -12,7 +13,7 @@ for (const diff of ['easy', 'normal', 'hard']) {
     const race = new Race(track, {});
     const racers = [new Racer(0, 'Ty', true)];
     racers[0].autopilot = true;
-    for (let i = 0; i < 11; i++) racers.push(new Racer(i + 1, makeBotName(i), false));
+    for (let i = 0; i < 11; i++) racers.push(new Racer(i + 1, botName(i), false));
     race.setup({ racers, difficulty: DIFFICULTY[diff] });
     race.go();
     while (!race.winner && race.time < 400) {

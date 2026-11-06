@@ -1,4 +1,5 @@
-// Game translations. Bot names and model titles stay unchanged on purpose.
+// Game translations. Model titles stay unchanged on purpose. Bot names are local
+// equivalents of the same jokes, not literal translations.
 
 export const LANGS = [
   { code: 'cs', name: 'Čeština' },
@@ -327,6 +328,44 @@ export const STRINGS = {
   },
 };
 
+export const BOT_NAMES = {
+  pl: [
+    'Zenek Rakieta', 'Mirek 3000', 'Waldek Ogon', 'Stefan Pod Prąd', 'Kaziu Turbo', 'Bogdan Bez Hamulca',
+    'Sławek Spóźnialski', 'Romek Prawie', 'Heniek Zakręt', 'Zdzisiek Sprint', 'Januszek', 'Dawid Dziesiątka',
+    'Rysiek Wić', 'Tadek Fruktoza', 'Ignacy Akrosom', 'Lechu Reotaksja', 'Maniek Mitochondrium', 'Gienek Haploid', 'Olek Chromatyda',
+  ],
+  en: [
+    'Rocket Ronnie', 'Mike 3000', 'Wally Whiptail', 'Steve Upstream', 'Turbo Terry', 'Brakeless Bob',
+    'Late Larry', 'Almost Albert', 'Hairpin Harry', 'Sprint Stan', 'Little Johnny', 'Perfect Ten Dave',
+    'Ricky Flagellum', 'Fructose Fred', 'Ian Acrosome', 'Rheotaxis Rob', 'Mitochondria Max', 'Haploid Hank', 'Chromatid Charlie',
+  ],
+  de: [
+    'Raketen-Ralf', 'Micha 3000', 'Walter Wedelschwanz', 'Stefan Stromauf', 'Turbo-Torsten', 'Bernd Ohne Bremse',
+    'Zu-spät-Sören', 'Fast-Frank', 'Kurven-Klaus', 'Sprint-Sven', 'Hänschen', 'Volltreffer-Dieter',
+    'Geißel-Gerd', 'Fructose-Fritz', 'Akrosom-Achim', 'Rheotaxis-Rudi', 'Mitochondrien-Manni', 'Haploid-Heinz', 'Chromatid-Karl',
+  ],
+  it: [
+    'Razzo Renzo', 'Mario 3000', 'Walter Codalunga', 'Stefano Controcorrente', 'Turbo Tullio', 'Bruno Senza Freni',
+    'Ritardo Riccardo', 'Quasi Alberto', 'Curva Carlo', 'Sprint Sandro', 'Giovannino', 'Davide Dieci',
+    'Flagello Fabio', 'Fruttosio Franco', 'Ignazio Acrosoma', 'Reotassi Remo', 'Mitocondrio Marco', 'Aploide Aldo', 'Cromatidio Cesare',
+  ],
+  cs: [
+    'Raketa Radek', 'Míra 3000', 'Vláďa Ocásek', 'Štěpán Proti Proudu', 'Turbo Tonda', 'Bohouš Bez Brzd',
+    'Opozdilec Standa', 'Skoro Roman', 'Honza Zatáčka', 'Zdeněk Sprint', 'Janeček', 'David Desítka',
+    'Bičík Bořek', 'Fruktóza Franta', 'Ignác Akrozom', 'Reotaxe Lojza', 'Mitochondrie Mirek', 'Haploidní Hynek', 'Chromatida Karel',
+  ],
+  sk: [
+    'Raketa Rado', 'Miro 3000', 'Vlado Chvostík', 'Štefan Proti Prúdu', 'Turbo Tono', 'Boris Bez Bŕzd',
+    'Oneskorený Stano', 'Takmer Roman', 'Jano Zákruta', 'Zdeno Šprint', 'Janko', 'Dávid Desiatka',
+    'Bičík Braňo', 'Fruktóza Fero', 'Ignác Akrozóm', 'Reotaxia Lojzo', 'Mitochondria Maroš', 'Haploidný Henrich', 'Chromatída Karol',
+  ],
+  ru: [
+    'Ракета Руслан', 'Миша 3000', 'Валера Хвост', 'Стёпа Против Течения', 'Турбо Толя', 'Боря Без Тормозов',
+    'Опоздавший Слава', 'Почти Рома', 'Гена Поворот', 'Сеня Спринт', 'Ванечка', 'Давид Десятка',
+    'Жгутик Жора', 'Фруктоза Федя', 'Игнат Акросома', 'Реотаксис Лёша', 'Митохондрия Макс', 'Гаплоид Гриша', 'Хроматида Коля',
+  ],
+};
+
 export const FACT_COUNT = 6;
 const STORE_KEY = 'jzm-lang';
 
@@ -360,6 +399,11 @@ export function t(key, params) {
   const text = STRINGS[current][key] ?? STRINGS.en[key] ?? key;
   if (!params) return text;
   return text.replace(/\{(\w+)\}/g, (m, name) => (name in params ? params[name] : m));
+}
+
+export function botName(index) {
+  const list = BOT_NAMES[current];
+  return list[index % list.length];
 }
 
 export function decimal(value) {

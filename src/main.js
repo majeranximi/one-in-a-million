@@ -6,10 +6,10 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Track, EGG_R, tissueTexture } from './track.js';
-import { Race, Racer, DIFFICULTY, BASE_SPEED, makeBotName } from './race.js';
+import { Race, Racer, DIFFICULTY, BASE_SPEED } from './race.js';
 import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag } from './assets.js';
 import { Sound } from './audio.js';
-import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang } from './i18n.js';
+import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang, botName } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -338,7 +338,7 @@ class Game {
     const offset = Math.floor(Math.random() * 19);
     for (let i = 0; i < botCount; i++) {
       const p = this.pool[i + 1];
-      const r = new Racer(i + 1, makeBotName(i + offset), false);
+      const r = new Racer(i + 1, botName(i + offset), false);
       r.mesh = p.mesh; r.mat = p.mat;
       const css = `#${p.mat.color.getHexString()}`;
       p.tag = nameTag(r.name, css);

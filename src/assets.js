@@ -120,7 +120,11 @@ export function nameTag(text, color) {
   const cv = document.createElement('canvas');
   cv.width = 512; cv.height = 96;
   const c = cv.getContext('2d');
-  c.font = '600 44px Onest, system-ui, sans-serif';
+  const font = (size) => `600 ${size}px Onest, system-ui, sans-serif`;
+  c.font = font(44);
+  // Long names shrink to fit instead of being cut off at the canvas edge.
+  const width = c.measureText(text).width;
+  if (width > 490) c.font = font(Math.floor((44 * 490) / width));
   c.textAlign = 'center'; c.textBaseline = 'middle';
   c.shadowColor = 'rgba(20,0,10,.95)'; c.shadowBlur = 12;
   c.fillStyle = color;
