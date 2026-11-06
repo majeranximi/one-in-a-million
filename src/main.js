@@ -14,6 +14,7 @@ import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const REAL_CM = 18;
+const TAP_BURST_MS = 700;
 
 const RACER_COLORS = [0xffd9c2, 0xffc4e0, 0xd8c8ff, 0xc4ffd8, 0xfff3b0, 0xffb7a8, 0xb8e0ff, 0xf0d0ff, 0xd8ffb8, 0xffd0a0];
 function store(key, value) {
@@ -376,6 +377,7 @@ class Game {
   startRace() {
     this.sound.start();
     this.mouse.active = false; // the cursor is on the button; mouse steering starts when it moves
+    this.touch.boostUntil = 0;
     this.mode = 'countdown';
     this.resetWorld();
     const racers = this.makeRacers(this.botCount, true);
@@ -467,7 +469,7 @@ class Game {
   setupInput() {
     this.keys = new Set();
     this.mouse = { x: 0, y: 0, active: false, down: false };
-    this.touch = { x: 0, y: 0, boost: false };
+    this.touch = { x: 0, y: 0, boost: false, boostUntil: 0 };
     this.coarse = window.matchMedia?.('(pointer: coarse)').matches;
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -516,8 +518,30 @@ class Game {
     stick.addEventListener('pointerup', endStick);
     stick.addEventListener('pointercancel', endStick);
     const bb = $('boostbtn');
-    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); this.touch.boost = true; if (this.player) this.race.struggle(this.player); });
-    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) bb.addEventListener(ev, () => { this.touch.boost = false; });
+    let boostId = null;
+    bb.addEventListener('pointerdown', (e) => {
+      boostId = e.pointerId;
+      // Capture keeps the burst going when the thumb drifts off the button.
+      try { bb.setPointerCapture(boostId); } catch { /* the release events below still end the burst */ }
+      this.touch.boost = true;
+      // A quick tap still gives a burst you can feel, not just a few milliseconds of one.
+      this.touch.boostUntil = performance.now() + TAP_BURST_MS;
+      bb.classList.add('on');
+      if (this.player) this.race.struggle(this.player);
+    });
+    const endBoost = (e) => {
+      if (e.pointerId !== boostId) return;
+      boostId = null;
+      this.touch.boost = false;
+      bb.classList.remove('on');
+    };
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) bb.addEventListener(ev, endBoost);
+
+    // Stops long-press gestures (context menu, magnifier), which would otherwise cancel a held touch.
+    for (const el of [stick, bb]) {
+      el.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+      el.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
   }
 
   readInput() {
@@ -535,7 +559,7 @@ class Game {
     }
     const l = Math.hypot(x, y);
     if (l > 1) { x /= l; y /= l; }
-    const boost = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight') || this.mouse.down || this.touch.boost;
+    const boost = k.has('Space') || k.has('ShiftLeft') || k.has('ShiftRight') || this.mouse.down || this.touch.boost || performance.now() < this.touch.boostUntil;
     return { x, y, boost };
   }
 
@@ -613,6 +637,7 @@ class Game {
     if (!player) return;
     // Fuel bar every frame, everything else 8 times per second.
     $('atpfill').style.transform = `scaleX(${player.energy / 100})`;
+    $('boostbtn').classList.toggle('empty', player.energy < 1 || player.infected > 0);
     if (this.hudTimer > 0) return;
     this.hudTimer = 0.12;
     const rank = race.ranking();
