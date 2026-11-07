@@ -1,4 +1,7 @@
 // Race simulation: swimmers, bots, obstacles. It leaves rendering to the code behind the hooks.
+// Roles: 'solo' runs everything; in multiplayer the 'host' runs bots, white blood cells and the
+// finish, while each 'client' simulates only its own swimmer. Racers marked `remote` are driven
+// from the network (their position is set from outside) and are never stepped here.
 import { EGG_R } from './track.js';
 
 export const BASE_SPEED = 34;
@@ -155,11 +158,18 @@ export class Race {
       addPickup(s, x, y, 'hyper');
     }
     this.pickups.sort((a, b) => a.s - b.s);
+
+    // Stable ids, shared by every player in a multiplayer race.
+    this.obstacles.forEach((o, i) => { o.id = i; });
+    this.pickups.forEach((p, i) => { p.id = i; });
+    this.hunters.forEach((h, i) => { h.id = i; });
   }
 
-  setup({ racers, difficulty }) {
+  setup({ racers, difficulty, role = 'solo', rubber = true }) {
     this.racers = racers;
     this.difficulty = difficulty;
+    this.role = role;
+    this.rubber = rubber;
     this.time = 0;
     this.winner = null;
     this.finalOrder = null;
@@ -196,14 +206,25 @@ export class Race {
     if (this.state === 'countdown' || this.state === 'idle') return;
     this.time += dt;
     this.updateObstacles(dt);
-    this.updateHunters(dt);
+    if (this.role !== 'client') this.updateHunters(dt);
     for (const r of this.racers) {
+      if (r.remote) { this.proxyTick(r, dt); continue; }
       if (!r.isPlayer || r.autopilot) this.botThink(r, dt);
       this.step(r, dt);
     }
     this.collideRacers();
     if (this.state === 'won') {
       this.afterWin += dt;
+    }
+  }
+
+  // A swimmer moved by the network: only its tail animation and, on the host, a safety release.
+  proxyTick(r, dt) {
+    r.waveT += dt * (5 + Math.abs(r.vs) * 0.44 + (r.boosting ? 8 : 0));
+    if (this.role === 'host' && r.eatenBy) {
+      r.eatenT -= dt;
+      // The player's own release message normally arrives first; this covers a lost one.
+      if (r.eatenT < -2) this.freeHunter(r);
     }
   }
 
@@ -312,7 +333,7 @@ export class Race {
   // Gentle balancing: bots far behind the player catch up, bots far ahead ease off.
   rubberBand(r) {
     const player = this.racers.find((p) => p.isPlayer);
-    if (!player || !this.difficulty.help) return 1;
+    if (!this.rubber || !player || !this.difficulty.help) return 1;
     const gap = r.s - player.s;
     const k = this.difficulty.help;
     if (gap > 60) return 1 - 0.1 * k * clamp((gap - 60) / 120, 0, 1);
@@ -393,16 +414,10 @@ export class Race {
     const d = Math.hypot(ds, lat);
     if (d > EGG_R + 0.5) return;
     if (!this.winner) {
-      this.winner = r;
-      r.finished = true;
-      r.place = 1;
-      r.finishTime = this.time;
-      this.state = 'won';
-      this.afterWin = 0;
-      // Order and distances are frozen at the moment of victory; everyone reaches the shell later anyway.
-      this.finalOrder = this.racers.slice().sort((a, b) => (a === r ? -1 : b === r ? 1 : b.s - a.s));
-      for (const x of this.racers) x.finalS = x.s;
-      this.hooks.onWin?.(r);
+      // A client cannot decide who won: it asks the host and waits at the shell for the answer.
+      if (this.role === 'client') {
+        if (!r.claimed) { r.claimed = true; this.hooks.onClaim?.(r); }
+      } else this.declareWinner(r);
     } else if (!r.finished && r.blocked <= 0) {
       // Cortical reaction: the shell is already hard, so latecomers bounce off.
       r.blocked = 0.5;
@@ -416,6 +431,25 @@ export class Race {
     }
   }
 
+  declareWinner(r) {
+    // Order and distances are frozen at the moment of victory; everyone reaches the shell later anyway.
+    const order = this.racers.slice().sort((a, b) => (a === r ? -1 : b === r ? 1 : b.s - a.s));
+    this.applyWin(r, order, this.racers.map((x) => x.s));
+  }
+
+  applyWin(r, order, finalS) {
+    if (this.winner) return;
+    this.winner = r;
+    r.finished = true;
+    r.place = 1;
+    r.finishTime = this.time;
+    this.state = 'won';
+    this.afterWin = 0;
+    this.finalOrder = order;
+    this.racers.forEach((x, i) => { x.finalS = finalS[i]; });
+    this.hooks.onWin?.(r);
+  }
+
   collideRacers() {
     const rs = this.racers;
     for (let i = 0; i < rs.length; i++) {
@@ -423,18 +457,21 @@ export class Race {
       if (a.finished || a.eatenBy) continue;
       for (let j = i + 1; j < rs.length; j++) {
         const b = rs[j];
-        if (b.finished || b.eatenBy) continue;
+        if (b.finished || b.eatenBy || (a.remote && b.remote)) continue;
         const ds = a.s - b.s;
         if (Math.abs(ds) > RACER_RADIUS * 2) continue;
         const dx = a.x - b.x, dy = a.y - b.y;
         const d = Math.hypot(dx, dy, ds);
         if (d >= RACER_RADIUS * 2 || d < 1e-4) continue;
         const push = (RACER_RADIUS * 2 - d) / d;
-        a.x += dx * push * 0.5; a.y += dy * push * 0.5;
-        b.x -= dx * push * 0.5; b.y -= dy * push * 0.5;
+        // A network-driven swimmer cannot be moved here, so the other one takes the whole push.
+        const wa = a.remote ? 0 : b.remote ? 1 : 0.5, wb = b.remote ? 0 : a.remote ? 1 : 0.5;
+        a.x += dx * push * wa; a.y += dy * push * wa;
+        b.x -= dx * push * wb; b.y -= dy * push * wb;
         const lat = Math.hypot(dx, dy) || 1;
-        a.vx += (dx / lat) * 2.2; a.vy += (dy / lat) * 2.2;
-        b.vx -= (dx / lat) * 2.2; b.vy -= (dy / lat) * 2.2;
+        const kick = 4.4;
+        a.vx += (dx / lat) * kick * wa; a.vy += (dy / lat) * kick * wa;
+        b.vx -= (dx / lat) * kick * wb; b.vy -= (dy / lat) * kick * wb;
         if (a.isPlayer || b.isPlayer) this.hooks.onNudge?.();
       }
     }
@@ -496,6 +533,15 @@ export class Race {
       const lh = Math.hypot(h.x, h.y);
       if (lh > R2) { h.x *= R2 / lh; h.y *= R2 / lh; }
     }
+  }
+
+  // Ends a hold without moving the swimmer (the host uses it for players on other devices).
+  freeHunter(r) {
+    const h = r.eatenBy;
+    if (!h) return;
+    if (h.hold !== undefined) { h.hold = null; h.sated = 7; }
+    r.eatenBy = null;
+    r.wbcCooldown = 7;
   }
 
   release(r) {

@@ -9,6 +9,7 @@ import { Track, EGG_R, tissueTexture } from './track.js';
 import { Race, Racer, DIFFICULTY, BASE_SPEED } from './race.js';
 import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag } from './assets.js';
 import { Sound } from './audio.js';
+import { Online } from './online.js';
 import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang, botName } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
@@ -70,6 +71,7 @@ class Game {
     this.setupComposer();
     this.setupInput();
     this.setupUi();
+    this.online = new Online(this, store);
 
     this.camS = 40; this.camX = 0; this.camY = 0;
     this.mode = 'menu';
@@ -89,49 +91,62 @@ class Game {
     this.renderer.setAnimationLoop(() => this.frame());
 
     $('startBtn').disabled = false;
+    $('onlineBtn').disabled = false;
     this.setStartState('ready');
     window.__game = this; // used for testing and debugging
-    if (new URLSearchParams(location.search).has('autopilot')) {
-      this.autopilot = true;
-      this.startRace();
-    }
+    const params = new URLSearchParams(location.search);
+    this.autopilot = params.has('autopilot');
+    // An invite link opens the online screen with the room code filled in.
+    const room = params.get('room');
+    if (room) {
+      if ($('lang').hidden) this.online.openScreen(room);
+      else this.pendingRoom = room;
+    } else if (this.autopilot) this.startRace();
   }
 
   hooks() {
     const near = (r) => this.player && Math.abs(r.s - this.player.s) < 45;
+    // Tells the other players what happened, in a multiplayer race.
+    const net = (kind, r, id) => this.online?.event(kind, r, id);
     return {
       onWall: (r) => { if (r === this.player) { this.sound.wall(); this.shake = Math.max(this.shake, 0.35); } },
       onMucus: (r, w) => {
+        net('mucus', r);
         this.splash(r, 0xfff0c8, 26);
         w.mesh.userData.flash = 1;
         if (r === this.player) { this.sound.splat(); this.shake = 0.8; showToast(t('toast.mucus'), t('toast.mucusText'), 1.8); }
       },
       onHole: (r, w) => { if (r === this.player) { this.sound.tone(520, 0.18, 'triangle', 0.12, 1.5); w.mesh.userData.flash = 0.5; } },
       onBump: (r, o) => {
+        net('bump', r, o.id);
         if (r === this.player) { this.sound.hit(); this.shake = 0.9; } else if (near(r)) this.sound.tone(190, 0.1, 'sine', 0.08, 0.5);
         this.splash(r, 0xff4e4e, 12);
         void o;
       },
       onVirus: (r, o) => {
+        net('virus', r, o.id);
         this.splash(r, 0x9dff6a, 28);
         o.mesh.visible = false;
         if (r === this.player) { this.sound.virus(); this.shake = 0.6; showToast(t('toast.virus'), t('toast.virusText'), 1.8); }
       },
-      onSmash: (r) => { this.splash(r, 0x9ff4ff, 14); },
+      onSmash: (r, o) => { net('smash', r, o.id); this.splash(r, 0x9ff4ff, 14); },
       onPickup: (r, p) => {
+        net('pickup', r, p.id);
         p.mesh.visible = false;
         if (r === this.player) {
           if (p.kind === 'hyper') { this.sound.hyper(); showToast(t('toast.hyper'), t('toast.hyperText'), 2); } else this.sound.pickup();
         }
       },
       onEaten: (r, h) => {
+        net('eaten', r, h.id);
         h.mesh.userData.gulp = 1;
         if (r === this.player) { this.sound.eaten(); this.shake = 1.2; showToast(t('toast.eaten'), t('toast.eatenText'), 1.7); }
       },
-      onReleased: (r) => { this.splash(r, 0xfff6e8, 20); if (r === this.player) this.sound.tone(300, 0.25, 'triangle', 0.14, 1.8); },
-      onBounced: (r) => { this.splash(r, 0x9fe6ff, 18); if (r === this.player) { this.sound.tone(1200, 0.15, 'square', 0.06, 0.5); this.shake = 0.8; } },
+      onReleased: (r) => { net('release', r); this.splash(r, 0xfff6e8, 20); if (r === this.player) this.sound.tone(300, 0.25, 'triangle', 0.14, 1.8); },
+      onBounced: (r) => { net('bounce', r); this.splash(r, 0x9fe6ff, 18); if (r === this.player) { this.sound.tone(1200, 0.15, 'square', 0.06, 0.5); this.shake = 0.8; } },
       onNudge: () => { this.shake = Math.max(this.shake, 0.18); },
-      onWin: (r) => this.onWin(r),
+      onClaim: (r) => net('claim', r),
+      onWin: (r) => { net('win', r); this.onWin(r); },
     };
   }
 
@@ -324,31 +339,60 @@ class Game {
   }
 
   // ---------- States ----------
-  makeRacers(botCount, withPlayer) {
+  clearPool() {
     for (const p of this.pool) {
       p.mesh.visible = false;
       if (p.tag) { this.scene.remove(p.tag); p.tag = null; }
     }
+  }
+
+  // Gives a racer a swimmer from the pool; pool[0] is always the local player's white one.
+  dress(r, p, tagColor) {
+    r.mesh = p.mesh; r.mat = p.mat;
+    r.mesh.visible = true;
+    if (tagColor) {
+      p.tag = nameTag(r.name, tagColor);
+      p.tag.visible = false;
+      this.scene.add(p.tag);
+      r.tag = p.tag;
+    }
+  }
+
+  makeRacers(botCount, withPlayer) {
+    this.clearPool();
     const racers = [];
     if (withPlayer) {
       const r = new Racer(0, t('hud.you'), true);
-      r.mesh = this.pool[0].mesh; r.mat = this.pool[0].mat;
+      r.local = true;
+      this.dress(r, this.pool[0]);
       racers.push(r);
     }
     const offset = Math.floor(Math.random() * 19);
     for (let i = 0; i < botCount; i++) {
       const p = this.pool[i + 1];
       const r = new Racer(i + 1, botName(i + offset), false);
-      r.mesh = p.mesh; r.mat = p.mat;
-      const css = `#${p.mat.color.getHexString()}`;
-      p.tag = nameTag(r.name, css);
-      p.tag.visible = false;
-      this.scene.add(p.tag);
-      r.tag = p.tag;
+      this.dress(r, p, `#${p.mat.color.getHexString()}`);
       racers.push(r);
     }
-    racers.forEach((r) => { r.mesh.visible = true; });
     return racers;
+  }
+
+  // Multiplayer starting list: other players get cyan name tags, bots their usual colours.
+  makeOnlineRacers(roster, myId, role) {
+    this.clearPool();
+    let next = 1;
+    return roster.map((e, i) => {
+      const human = e.k === 'h';
+      const local = human && e.id === myId;
+      const r = new Racer(i, local ? t('hud.you') : human ? e.name : botName(e.n), human);
+      r.local = local;
+      r.netId = human ? e.id : null;
+      r.remote = !local && (human || role === 'client');
+      r.buf = null;
+      const p = local ? this.pool[0] : this.pool[next++];
+      this.dress(r, p, local ? null : human ? '#8ff4ff' : `#${p.mat.color.getHexString()}`);
+      return r;
+    });
   }
 
   resetWorld() {
@@ -375,17 +419,28 @@ class Game {
   }
 
   startRace() {
+    this.beginRace(this.makeRacers(this.botCount, true), { difficulty: DIFFICULTY[this.diff] });
+  }
+
+  startOnlineRace({ roster, myId, diff, role, pos }) {
+    this.beginRace(this.makeOnlineRacers(roster, myId, role), { difficulty: DIFFICULTY[diff] || DIFFICULTY.normal, role, pos });
+  }
+
+  beginRace(racers, { difficulty, role = 'solo', pos = null }) {
     this.sound.start();
     this.mouse.active = false; // the cursor is on the button; mouse steering starts when it moves
     this.touch.boostUntil = 0;
     this.mode = 'countdown';
     this.resetWorld();
-    const racers = this.makeRacers(this.botCount, true);
-    this.player = racers[0];
+    this.player = racers.find((r) => r.local);
     this.player.autopilot = !!this.autopilot;
-    this.race.setup({ racers, difficulty: DIFFICULTY[this.diff] });
+    // Bots only ease off for a lone player; in multiplayer the race stays fair for everyone.
+    this.race.setup({ racers, difficulty, role, rubber: role === 'solo' });
+    // Players use the host's starting grid.
+    if (pos) racers.forEach((r, i) => { if (pos[i]) [r.s, r.x, r.y] = pos[i]; });
     this.camS = this.player.s - 40; this.camX = 0; this.camY = 0;
-    $('menu').hidden = true; $('results').hidden = true; $('pause').hidden = true;
+    for (const id of ['menu', 'results', 'pause', 'mp', 'room', 'lang', 'credits']) $(id).hidden = true;
+    $('vignette').className = '';
     $('hud').hidden = false;
     $('touch').hidden = !this.coarse;
     this.buildHud();
@@ -394,6 +449,52 @@ class Game {
     this.lastCount = 4;
     $('count').hidden = false;
     this.resultsShown = false;
+  }
+
+  // Leaving multiplayer: back to the main menu with the demo race behind it.
+  exitOnline() {
+    for (const id of ['results', 'pause', 'room', 'mp', 'count']) $(id).hidden = true;
+    $('menu').hidden = false;
+    this.startAttract();
+  }
+
+  exitRaceToLobby() {
+    $('results').hidden = true;
+    $('pause').hidden = true;
+    this.startAttract();
+  }
+
+  // What another player's swimmer just did, shown without re-running their simulation.
+  remoteFx(kind, r, id) {
+    const { race } = this;
+    switch (kind) {
+      case 'mucus': this.splash(r, 0xfff0c8, 26); break;
+      case 'bump': this.splash(r, 0xff4e4e, 12); break;
+      case 'smash': this.splash(r, 0x9ff4ff, 14); break;
+      case 'virus': {
+        this.splash(r, 0x9dff6a, 28);
+        const o = race.obstacles[id];
+        if (o) { o.alive = false; o.cooldown = Math.max(o.cooldown, 0.4); }
+        break;
+      }
+      case 'pickup': {
+        const p = race.pickups[id];
+        if (p) p.timer = Math.max(p.timer, 0.4);
+        break;
+      }
+      case 'eaten': {
+        const h = race.hunters[id];
+        if (h) h.mesh.userData.gulp = 1;
+        break;
+      }
+      case 'release': this.splash(r, 0xfff6e8, 20); break;
+      case 'bounce': this.splash(r, 0x9fe6ff, 18); break;
+      default:
+    }
+  }
+
+  toast(title, text, seconds) {
+    showToast(title, text, seconds);
   }
 
   onWin(winner) {
@@ -447,7 +548,14 @@ class Game {
       list.append(li);
     });
     $('fact').textContent = t(`fact.${Math.floor(Math.random() * FACT_COUNT)}`);
-    if (won && !player.autopilot) {
+    // In multiplayer only the host starts the next race; records are for solo races.
+    const online = this.online?.active;
+    const guest = online && !this.online.isHost;
+    $('againBtn').hidden = guest;
+    $('resultsWait').hidden = !guest;
+    $('menuBtn').textContent = online ? t(guest ? 'mp.leave' : 'mp.lobby') : t('results.menu');
+    this.online?.raceOver();
+    if (won && !player.autopilot && !online) {
       const key = `jzm-best-${this.diff}`;
       const prev = parseFloat(store(key));
       const elapsed = race.time - (race.afterWin || 0);
@@ -459,10 +567,20 @@ class Game {
   }
 
   togglePause(force) {
+    // Online, the race cannot stop for one player: the menu opens over the running race.
+    if (this.online?.active) {
+      if (!['countdown', 'race', 'finish'].includes(this.mode)) return;
+      $('pause').hidden = !(force ?? $('pause').hidden);
+      $('pauseNote').hidden = false;
+      $('quitBtn').textContent = t('mp.leave');
+      return;
+    }
     if (this.mode !== 'race' && this.mode !== 'paused') return;
     const pause = force ?? this.mode === 'race';
     this.mode = pause ? 'paused' : 'race';
     $('pause').hidden = !pause;
+    $('pauseNote').hidden = true;
+    $('quitBtn').textContent = t('pause.quit');
   }
 
   // ---------- Input ----------
@@ -475,6 +593,7 @@ class Game {
 
     const steer = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight']);
     window.addEventListener('keydown', (e) => {
+      if (e.target instanceof HTMLInputElement) return; // typing a name or a room code
       if (steer.has(e.code) && this.mode !== 'menu' && $('results').hidden) e.preventDefault();
       if (e.repeat) return;
       this.keys.add(e.code);
@@ -484,7 +603,7 @@ class Game {
       if (e.code === 'Enter' && this.mode === 'menu' && !$('startBtn').disabled && !$('menu').hidden && $('credits').hidden && document.activeElement?.tagName !== 'BUTTON') this.startRace();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
-    window.addEventListener('blur', () => { this.keys.clear(); this.togglePause(true); });
+    window.addEventListener('blur', () => { this.keys.clear(); if (!this.online?.active) this.togglePause(true); });
 
     const canvas = $('scene');
     window.addEventListener('pointermove', (e) => {
@@ -582,10 +701,21 @@ class Game {
     seg('botSeg', () => this.botCount, (v) => { this.botCount = parseInt(v, 10); store('jzm-bots', v); });
     this.updateBest();
     $('startBtn').onclick = () => this.startRace();
-    $('againBtn').onclick = () => this.startRace();
-    $('menuBtn').onclick = () => { $('results').hidden = true; $('menu').hidden = false; this.startAttract(); };
+    $('onlineBtn').onclick = () => this.online.openScreen();
+    $('againBtn').onclick = () => (this.online.active ? this.online.startRace() : this.startRace());
+    $('menuBtn').onclick = () => {
+      if (this.online.active) {
+        if (this.online.isHost) this.online.backToRoom();
+        else this.online.leave();
+        return;
+      }
+      $('results').hidden = true; $('menu').hidden = false; this.startAttract();
+    };
     $('resumeBtn').onclick = () => this.togglePause(false);
-    $('quitBtn').onclick = () => { $('pause').hidden = true; $('menu').hidden = false; this.startAttract(); };
+    $('quitBtn').onclick = () => {
+      if (this.online.active) { this.online.leave(); return; }
+      $('pause').hidden = true; $('menu').hidden = false; this.startAttract();
+    };
     $('creditsBtn').onclick = () => { $('credits').hidden = false; };
     $('closeCredits').onclick = () => { $('credits').hidden = true; };
   }
@@ -600,6 +730,7 @@ class Game {
     this.setStartState(this.startState || 'loading');
     $('langCur').textContent = langName();
     if (this.diff) this.updateBest();
+    this.online?.renderRoom();
   }
 
   updateBest() {
@@ -918,11 +1049,13 @@ class Game {
     }
 
     if (this.mode === 'race' || this.mode === 'finish' || this.mode === 'results') {
+      this.online.beforeUpdate();
       if (player && !player.autopilot && !player.finished) {
         const i = this.readInput();
         player.input.x = i.x; player.input.y = i.y; player.input.boost = i.boost;
       }
       race.update(dt);
+      this.online.afterUpdate(dt);
       if (player) {
         player.chased = race.hunters.some((h) => h.prey === player && !h.hold);
         this.sound.update(clamp(player.vs / 60, 0, 1), player.boosting, player.chased || track.eggS - player.s < 200);
@@ -1030,6 +1163,11 @@ function setupLanguage(game) {
       game.refreshLanguage();
       $('lang').hidden = true;
       $('menu').hidden = false;
+      // Opened from an invite link: continue to the room once a language is chosen.
+      if (game.pendingRoom && game.online) {
+        game.online.openScreen(game.pendingRoom);
+        game.pendingRoom = null;
+      }
     };
     list.append(b);
   }

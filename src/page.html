@@ -110,6 +110,28 @@ legend { padding: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; t
 .meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-soft); }
 .link { background: none; border: 0; padding: 0; text-decoration: underline; color: var(--ink-soft); }
 #results { background: rgba(24, 2, 8, .55); justify-content: center; }
+#mp, #room { background: rgba(24, 2, 8, .72); justify-content: center; }
+input, .selectable { -webkit-user-select: text; user-select: text; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.field input { font: 500 17px var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); background: rgba(40, 5, 15, .7); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; min-width: 0; }
+.field input:focus-visible { outline: 2px solid var(--sperm); outline-offset: 1px; }
+#mpCode { font-family: var(--display); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.join { display: flex; align-items: flex-end; gap: 10px; }
+.join .field { flex: 1 1 0; min-width: 0; }
+.field input { width: 100%; box-sizing: border-box; }
+.join .quiet { padding-block: 12px; }
+.note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.status { margin: 0; min-height: 1.4em; font-size: 14px; line-height: 1.45; }
+.status.error { color: #ffb3bb; }
+.invite { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.invite code { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; font: 500 13px var(--body); color: var(--ink); background: rgba(40, 5, 15, .7); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.sub { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.players { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.players li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(40, 5, 15, .55); font-size: 15px; overflow-wrap: anywhere; }
+.players li.me { color: var(--sperm); font-weight: 700; }
+.players small { font-size: 12px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; }
+#mp .card, #room .card { width: min(520px, 100%); margin: auto; padding: clamp(20px, 4vw, 34px); background: rgba(30, 4, 12, .92); border: 1px solid var(--line); border-radius: 18px; display: flex; flex-direction: column; gap: 16px; }
+button:disabled { cursor: progress; opacity: .6; }
 #results .card, #credits .card, #pause .card { width: min(560px, 100%); margin: auto; padding: clamp(20px, 4vw, 34px); background: rgba(30, 4, 12, .9); border: 1px solid var(--line); border-radius: 18px; display: flex; flex-direction: column; gap: 16px; }
 h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(26px, 5vw, 44px); line-height: 1.05; text-wrap: balance; }
 #resultLead { margin: 0; font-size: 16px; line-height: 1.5; }
@@ -199,7 +221,10 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
         </div>
       </fieldset>
     </div>
-    <button id="startBtn" class="cta" type="button" disabled>Loading models…</button>
+    <div class="row">
+      <button id="startBtn" class="cta" type="button" disabled>Loading models…</button>
+      <button id="onlineBtn" class="quiet" type="button" disabled data-i18n="mp.online">Play online</button>
+    </div>
     <dl class="keys desktop">
       <dt data-i18n="keys.steerK">WASD, arrow keys or mouse</dt><dd data-i18n="keys.steer">steer</dd>
       <dt data-i18n="keys.boostK">Space, Shift or left button</dt><dd data-i18n="keys.boost">burst, costs ATP (collect fructose)</dd>
@@ -216,6 +241,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
 <section id="pause" class="screen" hidden>
   <div class="card">
     <h2 data-i18n="pause.title">Paused</h2>
+    <p id="pauseNote" class="note" hidden data-i18n="mp.pauseNote">The race keeps going for everyone.</p>
     <div class="row">
       <button id="resumeBtn" class="cta" type="button" data-i18n="pause.resume">Keep swimming</button>
       <button id="quitBtn" class="quiet" type="button" data-i18n="pause.quit">Quit to menu</button>
@@ -229,9 +255,61 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
     <p id="resultLead"></p>
     <ol id="table"></ol>
     <p id="fact"></p>
+    <p id="resultsWait" class="note" hidden data-i18n="mp.waiting">Waiting for the host to start the race.</p>
     <div class="row">
       <button id="againBtn" class="cta" type="button" data-i18n="results.again">Race again</button>
       <button id="menuBtn" class="quiet" type="button" data-i18n="results.menu">Menu</button>
+    </div>
+  </div>
+</section>
+
+<section id="mp" class="screen" hidden>
+  <div class="card">
+    <h2 data-i18n="mp.title">Play online</h2>
+    <label class="field"><span data-i18n="mp.name">Your name</span><input id="mpName" type="text" maxlength="16" autocomplete="nickname" spellcheck="false"></label>
+    <button id="mpCreate" class="cta" type="button" data-i18n="mp.create">Create a room</button>
+    <div class="join">
+      <label class="field"><span data-i18n="mp.code">Room code</span><input id="mpCode" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text"></label>
+      <button id="mpJoin" class="quiet" type="button" data-i18n="mp.join">Join</button>
+    </div>
+    <p id="mpStatus" class="status" role="status" aria-live="polite"></p>
+    <p class="note" data-i18n="mp.note">Players connect directly to the host. The host's tab must stay open and in front for the whole race.</p>
+    <div class="row"><button id="mpBack" class="quiet" type="button" data-i18n="mp.back">Back</button></div>
+  </div>
+</section>
+
+<section id="room" class="screen" hidden>
+  <div class="card">
+    <h2 id="roomTitle"></h2>
+    <div class="invite">
+      <code id="roomLink" class="selectable"></code>
+      <button id="roomCopy" class="quiet" type="button" data-i18n="mp.copy">Copy invite link</button>
+    </div>
+    <h3 id="roomCount" class="sub"></h3>
+    <ul id="roomPlayers" class="players"></ul>
+    <div id="roomHostOpts" class="opts">
+      <fieldset>
+        <legend data-i18n="level">Level</legend>
+        <div class="seg" id="roomDiff">
+          <button type="button" id="rd-easy" data-v="easy" aria-pressed="false" data-i18n="diff.easy">Easy</button>
+          <button type="button" id="rd-normal" data-v="normal" aria-pressed="true" data-i18n="diff.normal">Normal</button>
+          <button type="button" id="rd-hard" data-v="hard" aria-pressed="false" data-i18n="diff.hard">Hard</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend data-i18n="bots">Bots</legend>
+        <div class="seg" id="roomBots">
+          <button type="button" id="rb-0" data-v="0" aria-pressed="false">0</button>
+          <button type="button" id="rb-5" data-v="5" aria-pressed="true">5</button>
+          <button type="button" id="rb-11" data-v="11" aria-pressed="false">11</button>
+        </div>
+      </fieldset>
+    </div>
+    <p id="roomSettings" class="note"></p>
+    <p id="roomWait" class="note" data-i18n="mp.waiting">Waiting for the host to start the race.</p>
+    <div class="row">
+      <button id="roomStart" class="cta" type="button" data-i18n="mp.start">Start race</button>
+      <button id="roomLeave" class="quiet" type="button" data-i18n="mp.leave">Leave room</button>
     </div>
   </div>
 </section>
@@ -244,7 +322,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
       <li><span data-i18n="credits.wbc">White blood cell and virus</span>: Poly by Google, <a href="https://poly.pizza/m/aoZ4DjiO35h" target="_blank" rel="noopener">White blood cell</a>, <a href="https://poly.pizza/m/d_QDWsT0kBG" target="_blank" rel="noopener">Virus</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
       <li><span data-i18n="credits.rbc">Red blood cell</span>: William Smith, <a href="https://poly.pizza/m/0QFzCaYkqy_" target="_blank" rel="noopener">Healthy Red Blood Cell</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</li>
     </ul>
-    <p data-i18n="credits.engine">Engine: three.js (MIT). The tunnel, particles and sound are generated by the game code.</p>
+    <p data-i18n="credits.engine">Engine: three.js (MIT), PeerJS (MIT). The tunnel, particles and sound are generated by the game code.</p>
     <div class="row"><button id="closeCredits" class="quiet" type="button" data-i18n="credits.close">Close</button></div>
   </div>
 </section>
