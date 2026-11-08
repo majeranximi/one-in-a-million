@@ -47,9 +47,9 @@ function errorKind(err) {
 
 // The host's side of a room: accepts players and passes their messages on.
 export class HostRoom {
-  constructor(name, events) {
+  constructor(name, skin, events) {
     this.events = events;
-    this.players = [{ id: 0, name, conn: null }];
+    this.players = [{ id: 0, name, skin, conn: null }];
     this.nextId = 1;
     this.accepting = true;
     this.attempts = 0;
@@ -91,7 +91,8 @@ export class HostRoom {
           setTimeout(() => conn.close(), 500);
           return;
         }
-        player = { id: this.nextId++, name: cleanName(msg.name) || `#${this.nextId}`, conn };
+        const skin = typeof msg.skin === 'string' ? msg.skin.slice(0, 24) : 'classic';
+        player = { id: this.nextId++, name: cleanName(msg.name) || `#${this.nextId}`, skin, conn };
         this.players.push(player);
         conn.send({ t: 'welcome', id: player.id, code: this.code });
         this.events.onJoin(player);
@@ -124,13 +125,13 @@ export class HostRoom {
 
 // A player's side: one connection to the host.
 export class ClientRoom {
-  constructor(code, name, events) {
+  constructor(code, name, skin, events) {
     this.events = events;
     const peer = (this.peer = new Peer(PEER_OPTIONS));
     this.timer = setTimeout(() => this.fail('connect'), CONNECT_TIMEOUT_MS);
     peer.on('open', () => {
       const conn = (this.conn = peer.connect(PREFIX + code, { serialization: 'json', reliable: true }));
-      conn.on('open', () => conn.send({ t: 'hello', v: PROTOCOL, name }));
+      conn.on('open', () => conn.send({ t: 'hello', v: PROTOCOL, name, skin }));
       conn.on('data', (msg) => {
         if (msg?.t === 'reject') { this.fail(msg.reason); return; }
         if (msg?.t === 'welcome') { clearTimeout(this.timer); this.joined = true; }

@@ -110,7 +110,41 @@ legend { padding: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; t
 .meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-soft); }
 .link { background: none; border: 0; padding: 0; text-decoration: underline; color: var(--ink-soft); }
 #results { background: rgba(24, 2, 8, .55); justify-content: center; }
-#mp, #room { background: rgba(24, 2, 8, .72); justify-content: center; }
+#mp, #room, #lab { background: rgba(24, 2, 8, .72); justify-content: center; }
+#lab .card { width: min(720px, 100%); margin: auto; padding: clamp(18px, 4vw, 32px); background: rgba(30, 4, 12, .94); border: 1px solid var(--line); border-radius: 18px; display: flex; flex-direction: column; gap: 14px; }
+.labHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+.dna { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3.4vw, 28px); color: var(--ovum); }
+.labBtn { display: inline-flex; align-items: baseline; gap: 8px; }
+.labBtn small { font-size: 12px; color: var(--ovum); font-weight: 700; }
+.labBody { max-height: min(56vh, 520px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+.upRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px; border-radius: 12px; background: rgba(40, 5, 15, .6); }
+.upText { display: flex; flex-direction: column; gap: 4px; flex: 1 1 260px; min-width: 0; }
+.upText b { font-size: 16px; }
+.upText span { font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+.pips { display: flex; gap: 5px; margin-top: 3px; }
+.pips i { width: 22px; height: 6px; border-radius: 3px; background: rgba(255, 235, 225, .18); }
+.pips i.on { background: var(--sperm); box-shadow: 0 0 6px rgba(143, 244, 255, .6); }
+.buy { white-space: nowrap; }
+.skinGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
+.skinCard { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; border-radius: 12px; background: rgba(40, 5, 15, .6); border: 1px solid transparent; }
+.skinCard canvas { width: 100%; height: auto; aspect-ratio: 168 / 64; }
+.skinCard b { font-size: 14px; }
+.skinCard.using { border-color: var(--sperm); }
+.skinCard.locked canvas { filter: grayscale(.85) brightness(.6); }
+.skinCard .buy { white-space: normal; font-size: 13px; padding: 8px 10px; }
+.achList { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.achList li { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 12px; background: rgba(40, 5, 15, .5); opacity: .62; }
+.achList li.got { opacity: 1; border-left: 3px solid var(--ovum); }
+.achList div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.achList b { font-size: 15px; }
+.achList span { font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.achList small { white-space: nowrap; font-weight: 700; color: var(--ovum); }
+.rewards { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.rewards:empty { display: none; }
+.rewards li { font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(40, 5, 15, .7); border: 1px solid var(--line); }
+.rewards li.dna { color: var(--blood); background: var(--ovum); border-color: var(--ovum); }
+.rewards li.ach { color: var(--ovum); border-color: var(--ovum); }
+.rewards li.skin { color: var(--sperm); border-color: var(--sperm); }
 input, .selectable { -webkit-user-select: text; user-select: text; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
 .field input { font: 500 17px var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); background: rgba(40, 5, 15, .7); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; min-width: 0; }
@@ -224,6 +258,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
     <div class="row">
       <button id="startBtn" class="cta" type="button" disabled>Loading models…</button>
       <button id="onlineBtn" class="quiet" type="button" disabled data-i18n="mp.online">Play online</button>
+      <button id="labBtn" class="quiet labBtn" type="button" disabled><span data-i18n="lab.open">Laboratory</span><small id="labDnaMenu" class="num"></small></button>
     </div>
     <dl class="keys desktop">
       <dt data-i18n="keys.steerK">WASD, arrow keys or mouse</dt><dd data-i18n="keys.steer">steer</dd>
@@ -253,6 +288,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
   <div class="card">
     <h2 id="resultTitle"></h2>
     <p id="resultLead"></p>
+    <ul id="resultsRewards" class="rewards"></ul>
     <ol id="table"></ol>
     <p id="fact"></p>
     <p id="resultsWait" class="note" hidden data-i18n="mp.waiting">Waiting for the host to start the race.</p>
@@ -260,6 +296,23 @@ h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(
       <button id="againBtn" class="cta" type="button" data-i18n="results.again">Race again</button>
       <button id="menuBtn" class="quiet" type="button" data-i18n="results.menu">Menu</button>
     </div>
+  </div>
+</section>
+
+<section id="lab" class="screen" hidden>
+  <div class="card">
+    <div class="labHead">
+      <h2 data-i18n="lab.title">Laboratory</h2>
+      <p id="labDna" class="dna num"></p>
+    </div>
+    <div class="seg" id="labTabs">
+      <button type="button" data-v="up" aria-pressed="true" data-i18n="lab.tabUp">Upgrades</button>
+      <button type="button" data-v="skins" aria-pressed="false" data-i18n="lab.tabSkins">Skins</button>
+      <button type="button" data-v="ach" aria-pressed="false" data-i18n="lab.tabAch">Achievements</button>
+    </div>
+    <div id="labBody" class="labBody"></div>
+    <p class="note" data-i18n="lab.note">Progress, upgrades and skins are saved in this browser. Upgrades also work in online races.</p>
+    <div class="row"><button id="labBack" class="quiet" type="button" data-i18n="lab.back">Back</button></div>
   </div>
 </section>
 

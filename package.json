@@ -6,6 +6,7 @@
     "models": "node tools/convert-models.mjs",
     "build": "node tools/build.mjs",
     "sim": "node tools/sim.mjs",
+    "check": "node tools/check-i18n.mjs",
     "deploy": "bash tools/deploy.sh",
     "start": "python3 -m http.server 8123 --bind 127.0.0.1 --directory dist"
   },

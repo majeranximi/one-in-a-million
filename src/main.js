@@ -7,9 +7,11 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Track, EGG_R, tissueTexture } from './track.js';
 import { Race, Racer, DIFFICULTY, BASE_SPEED } from './race.js';
-import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag } from './assets.js';
+import { loadModels, bioMaterial, wallMaterial, radialSprite, nameTag, paintSwimmer } from './assets.js';
 import { Sound } from './audio.js';
 import { Online } from './online.js';
+import { Lab } from './lab.js';
+import { cleanProgress, finishRace, mods, skinById, ACHIEVEMENTS } from './progress.js';
 import { LANGS, DEFAULT_LANG, FACT_COUNT, t, decimal, setLang, getLang, langName, savedLang, botName } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,6 +28,12 @@ function store(key, value) {
 }
 
 class Game {
+  constructor() {
+    let saved = null;
+    try { saved = JSON.parse(store('jzm-progress') || 'null'); } catch { /* start fresh */ }
+    this.progress = cleanProgress(saved);
+  }
+
   async init() {
     const canvas = $('scene');
     try {
@@ -72,6 +80,8 @@ class Game {
     this.setupInput();
     this.setupUi();
     this.online = new Online(this, store);
+    this.lab = new Lab(this);
+    this.refreshMenu();
 
     this.camS = 40; this.camX = 0; this.camY = 0;
     this.mode = 'menu';
@@ -92,6 +102,7 @@ class Game {
 
     $('startBtn').disabled = false;
     $('onlineBtn').disabled = false;
+    $('labBtn').disabled = false;
     this.setStartState('ready');
     window.__game = this; // used for testing and debugging
     const params = new URLSearchParams(location.search);
@@ -112,11 +123,13 @@ class Game {
       onWall: (r) => { if (r === this.player) { this.sound.wall(); this.shake = Math.max(this.shake, 0.35); } },
       onMucus: (r, w) => {
         net('mucus', r);
+        if (r === this.player) this.run.mucusHits++;
         this.splash(r, 0xfff0c8, 26);
         w.mesh.userData.flash = 1;
         if (r === this.player) { this.sound.splat(); this.shake = 0.8; showToast(t('toast.mucus'), t('toast.mucusText'), 1.8); }
       },
-      onHole: (r, w) => { if (r === this.player) { this.sound.tone(520, 0.18, 'triangle', 0.12, 1.5); w.mesh.userData.flash = 0.5; } },
+      onHole: (r, w) => { if (r === this.player) {
+        this.run.wallPasses++; this.sound.tone(520, 0.18, 'triangle', 0.12, 1.5); w.mesh.userData.flash = 0.5; } },
       onBump: (r, o) => {
         net('bump', r, o.id);
         if (r === this.player) { this.sound.hit(); this.shake = 0.9; } else if (near(r)) this.sound.tone(190, 0.1, 'sine', 0.08, 0.5);
@@ -125,6 +138,7 @@ class Game {
       },
       onVirus: (r, o) => {
         net('virus', r, o.id);
+        if (r === this.player) this.run.viruses++;
         this.splash(r, 0x9dff6a, 28);
         o.mesh.visible = false;
         if (r === this.player) { this.sound.virus(); this.shake = 0.6; showToast(t('toast.virus'), t('toast.virusText'), 1.8); }
@@ -134,15 +148,17 @@ class Game {
         net('pickup', r, p.id);
         p.mesh.visible = false;
         if (r === this.player) {
+          if (p.kind === 'hyper') this.run.hypers++; else this.run.fructose++;
           if (p.kind === 'hyper') { this.sound.hyper(); showToast(t('toast.hyper'), t('toast.hyperText'), 2); } else this.sound.pickup();
         }
       },
       onEaten: (r, h) => {
         net('eaten', r, h.id);
         h.mesh.userData.gulp = 1;
+        if (r === this.player) this.run.eaten++;
         if (r === this.player) { this.sound.eaten(); this.shake = 1.2; showToast(t('toast.eaten'), t('toast.eatenText'), 1.7); }
       },
-      onReleased: (r) => { net('release', r); this.splash(r, 0xfff6e8, 20); if (r === this.player) this.sound.tone(300, 0.25, 'triangle', 0.14, 1.8); },
+      onReleased: (r) => { net('release', r); if (r === this.player && this.mode === 'race') this.run.escapes++; this.splash(r, 0xfff6e8, 20); if (r === this.player) this.sound.tone(300, 0.25, 'triangle', 0.14, 1.8); },
       onBounced: (r) => { net('bounce', r); this.splash(r, 0x9fe6ff, 18); if (r === this.player) { this.sound.tone(1200, 0.15, 'square', 0.06, 0.5); this.shake = 0.8; } },
       onNudge: () => { this.shake = Math.max(this.shake, 0.18); },
       onClaim: (r) => net('claim', r),
@@ -302,7 +318,7 @@ class Game {
     this.pool = [];
     for (let i = 0; i < 20; i++) {
       const color = i === 0 ? 0xffffff : RACER_COLORS[i % RACER_COLORS.length];
-      const mat = bioMaterial({ color, roughness: 0.32, emissive: color, emissiveIntensity: 0.08 }, { rim: i === 0 ? 0x8ff4ff : color, rimStrength: i === 0 ? 0.95 : 0.4, wave: true });
+      const mat = bioMaterial({ color, roughness: 0.32, emissive: color, emissiveIntensity: 0.08 }, { rim: i === 0 ? 0x8ff4ff : color, rimStrength: i === 0 ? 0.95 : 0.4, wave: true, clock: this.timeU });
       const mesh = new THREE.Mesh(this.models.sperm, mat);
       mesh.scale.setScalar(9);
       mesh.frustumCulled = false;
@@ -346,9 +362,15 @@ class Game {
     }
   }
 
-  // Gives a racer a swimmer from the pool; pool[0] is always the local player's white one.
-  dress(r, p, tagColor) {
+  botLook(poolIndex) {
+    const color = RACER_COLORS[poolIndex % RACER_COLORS.length];
+    return { color, rim: color, rimStrength: 0.4 };
+  }
+
+  // Gives a racer a swimmer from the pool (pool[0] is always the local player's) and its look.
+  dress(r, p, tagColor, look) {
     r.mesh = p.mesh; r.mat = p.mat;
+    paintSwimmer(p.mat, look);
     r.mesh.visible = true;
     if (tagColor) {
       p.tag = nameTag(r.name, tagColor);
@@ -364,14 +386,15 @@ class Game {
     if (withPlayer) {
       const r = new Racer(0, t('hud.you'), true);
       r.local = true;
-      this.dress(r, this.pool[0]);
+      this.dress(r, this.pool[0], null, skinById(this.progress.skin));
       racers.push(r);
     }
     const offset = Math.floor(Math.random() * 19);
     for (let i = 0; i < botCount; i++) {
       const p = this.pool[i + 1];
       const r = new Racer(i + 1, botName(i + offset), false);
-      this.dress(r, p, `#${p.mat.color.getHexString()}`);
+      const look = this.botLook(i + 1);
+      this.dress(r, p, `#${new THREE.Color(look.color).getHexString()}`, look);
       racers.push(r);
     }
     return racers;
@@ -389,8 +412,9 @@ class Game {
       r.netId = human ? e.id : null;
       r.remote = !local && (human || role === 'client');
       r.buf = null;
-      const p = local ? this.pool[0] : this.pool[next++];
-      this.dress(r, p, local ? null : human ? '#8ff4ff' : `#${p.mat.color.getHexString()}`);
+      const index = local ? 0 : next++;
+      const look = local ? skinById(this.progress.skin) : human ? skinById(e.skin) : this.botLook(index);
+      this.dress(r, this.pool[index], local ? null : human ? '#8ff4ff' : `#${new THREE.Color(look.color).getHexString()}`, look);
       return r;
     });
   }
@@ -423,10 +447,13 @@ class Game {
   }
 
   startOnlineRace({ roster, myId, diff, role, pos }) {
-    this.beginRace(this.makeOnlineRacers(roster, myId, role), { difficulty: DIFFICULTY[diff] || DIFFICULTY.normal, role, pos });
+    this.beginRace(this.makeOnlineRacers(roster, myId, role), { difficulty: DIFFICULTY[diff] || DIFFICULTY.normal, diffKey: DIFFICULTY[diff] ? diff : 'normal', role, pos });
   }
 
-  beginRace(racers, { difficulty, role = 'solo', pos = null }) {
+  beginRace(racers, { difficulty, diffKey = this.diff, role = 'solo', pos = null }) {
+    this.raceDiff = diffKey;
+    // Per-race counters for achievements.
+    this.run = { mucusHits: 0, wallPasses: 0, eaten: 0, escapes: 0, fructose: 0, hypers: 0, viruses: 0, currentTime: 0, wasLast: false };
     this.sound.start();
     this.mouse.active = false; // the cursor is on the button; mouse steering starts when it moves
     this.touch.boostUntil = 0;
@@ -438,6 +465,7 @@ class Game {
     this.race.setup({ racers, difficulty, role, rubber: role === 'solo' });
     // Players use the host's starting grid.
     if (pos) racers.forEach((r, i) => { if (pos[i]) [r.s, r.x, r.y] = pos[i]; });
+    this.player.mods = mods(this.progress);
     this.camS = this.player.s - 40; this.camX = 0; this.camY = 0;
     for (const id of ['menu', 'results', 'pause', 'mp', 'room', 'lang', 'credits']) $(id).hidden = true;
     $('vignette').className = '';
@@ -555,6 +583,7 @@ class Game {
     $('resultsWait').hidden = !guest;
     $('menuBtn').textContent = online ? t(guest ? 'mp.leave' : 'mp.lobby') : t('results.menu');
     this.online?.raceOver();
+    this.showRewards({ won, place, total, online, elapsed: race.time - (race.afterWin || 0) });
     if (won && !player.autopilot && !online) {
       const key = `jzm-best-${this.diff}`;
       const prev = parseFloat(store(key));
@@ -564,6 +593,37 @@ class Game {
     this.updateBest();
     $('results').hidden = false;
     $('touch').hidden = true;
+  }
+
+  // DNA and achievements for the race that just ended (autopilot test runs earn nothing).
+  showRewards({ won, place, total, online, elapsed }) {
+    const box = $('resultsRewards');
+    box.textContent = '';
+    const { player, race, track } = this;
+    if (player.autopilot) return;
+    const run = { ...this.run, reachedAmpulla: player.finished || player.s >= track.zones[3].from };
+    const humans = race.racers.filter((r) => r.isPlayer).length;
+    const bots = race.racers.length - humans;
+    const res = finishRace(this.progress, { won, place, total, diff: this.raceDiff, bots, online: !!online, humans, time: elapsed, run });
+    this.saveProgress();
+    const line = (cls, text) => {
+      const li = document.createElement('li');
+      li.className = cls;
+      li.textContent = text;
+      box.append(li);
+    };
+    line('dna', t('res.dna', { n: res.earned }));
+    for (const id of res.unlocked) line('ach', t('res.ach', { name: t(`ach.${id}`), n: ACHIEVEMENTS.find((a) => a.id === id).reward }));
+    for (const id of res.newSkins) line('skin', t('res.skin', { name: t(`skin.${id}`) }));
+    this.refreshMenu();
+  }
+
+  saveProgress() {
+    store('jzm-progress', JSON.stringify(this.progress));
+  }
+
+  refreshMenu() {
+    $('labDnaMenu').textContent = t('lab.dna', { n: this.progress.dna });
   }
 
   togglePause(force) {
@@ -730,6 +790,8 @@ class Game {
     this.setStartState(this.startState || 'loading');
     $('langCur').textContent = langName();
     if (this.diff) this.updateBest();
+    if (this.progress) this.refreshMenu();
+    this.lab?.render();
     this.online?.renderRoom();
   }
 
@@ -773,6 +835,7 @@ class Game {
     this.hudTimer = 0.12;
     const rank = race.ranking();
     const place = rank.indexOf(player) + 1;
+    if (this.mode === 'race' && race.time > 10 && place === rank.length) this.run.wasLast = true;
     $('place').innerHTML = `${place}<small> / ${rank.length}</small>`;
     $('atpval').textContent = `${Math.round(player.energy)}%`;
     const mm = Math.max(0, (player.vs / BASE_SPEED) * 3.2);
@@ -1056,6 +1119,7 @@ class Game {
       }
       race.update(dt);
       this.online.afterUpdate(dt);
+      if (player && this.mode === 'race' && player.inCurrent) this.run.currentTime += dt;
       if (player) {
         player.chased = race.hunters.some((h) => h.prey === player && !h.hold);
         this.sound.update(clamp(player.vs / 60, 0, 1), player.boosting, player.chased || track.eggS - player.s < 200);

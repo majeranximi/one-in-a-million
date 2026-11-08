@@ -196,7 +196,7 @@ export class Online {
     const diff = this.store('jzm-mp-diff');
     const bots = parseInt(this.store('jzm-mp-bots'), 10);
     this.settings = { diff: ['easy', 'normal', 'hard'].includes(diff) ? diff : 'normal', bots: BOT_CHOICES.includes(bots) ? bots : 5 };
-    this.room = new HostRoom(name, {
+    this.room = new HostRoom(name, this.game.progress.skin, {
       onReady: (code) => { this.code = code; this.syncPlayers(); this.showRoom(); },
       onError: (kind) => this.end(kind),
       onJoin: () => { this.syncPlayers(); this.sendLobby(); this.renderRoom(); },
@@ -214,14 +214,14 @@ export class Online {
     this.setStatus(t('mp.connecting'));
     this.role = 'client';
     this.code = code;
-    this.room = new ClientRoom(code, name, {
+    this.room = new ClientRoom(code, name, this.game.progress.skin, {
       onMessage: (msg) => this.clientMessage(msg),
       onClosed: (kind) => this.end(kind),
     });
   }
 
   syncPlayers() {
-    this.players = this.room.players.map((p) => ({ id: p.id, name: p.name }));
+    this.players = this.room.players.map((p) => ({ id: p.id, name: p.name, skin: p.skin }));
   }
 
   sendLobby() {
@@ -263,7 +263,7 @@ export class Online {
     this.syncPlayers();
     const offset = Math.floor(Math.random() * 19);
     const roster = [
-      ...this.players.map((p) => ({ k: 'h', id: p.id, name: p.name })),
+      ...this.players.map((p) => ({ k: 'h', id: p.id, name: p.name, skin: p.skin })),
       ...Array.from({ length: this.settings.bots }, (_, i) => ({ k: 'b', n: i + offset })),
     ];
     this.inRace = true;
@@ -407,7 +407,7 @@ export class Online {
         const h = game.race.hunters[msg.h];
         if (this.inRace && me && h && !me.eatenBy && !me.finished) {
           me.eatenBy = h;
-          me.eatenT = 1.7;
+          me.eatenT = 1.7 * (me.mods?.immune ?? 1);
           game.race.hooks.onEaten?.(me, h);
         }
         break;

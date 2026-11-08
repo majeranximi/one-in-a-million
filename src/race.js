@@ -3,6 +3,7 @@
 // finish, while each 'client' simulates only its own swimmer. Racers marked `remote` are driven
 // from the network (their position is set from outside) and are never stepped here.
 import { EGG_R } from './track.js';
+import { NO_MODS } from './progress.js';
 
 export const BASE_SPEED = 34;
 const BOOST_SPEED = 20;
@@ -265,11 +266,13 @@ export class Race {
     const R = track.maxRadius(r.s);
     const lat = Math.hypot(r.x, r.y);
 
+    // Upgrades bought in the laboratory (only the local player has them).
+    const m = r.mods || NO_MODS;
     r.boosting = r.input.boost && r.energy > 0 && r.infected <= 0;
-    if (r.boosting) r.energy = Math.max(0, r.energy - 27 * dt);
-    else r.energy = Math.min(100, r.energy + 3.5 * dt);
+    if (r.boosting) r.energy = Math.max(0, r.energy - 27 * m.drain * dt);
+    else r.energy = Math.min(100, r.energy + 3.5 * m.regen * dt);
 
-    let target = BASE_SPEED * r.skill;
+    let target = BASE_SPEED * r.skill * m.speed;
     if (r.boosting) target += BOOST_SPEED;
     if (r.hyper > 0) target += HYPER_SPEED;
 
@@ -299,8 +302,8 @@ export class Race {
     r.vs += (target - r.vs) * Math.min(1, dt * (target > r.vs ? 1.7 : 2.6));
     r.s += r.vs * dt;
 
-    r.vx += r.input.x * LATERAL_ACCEL * dt;
-    r.vy += r.input.y * LATERAL_ACCEL * dt;
+    r.vx += r.input.x * LATERAL_ACCEL * m.agility * dt;
+    r.vy += r.input.y * LATERAL_ACCEL * m.agility * dt;
     const damp = Math.exp(-dt * LATERAL_DAMP);
     r.vx *= damp; r.vy *= damp;
     r.x += r.vx * dt; r.y += r.vy * dt;
@@ -346,8 +349,9 @@ export class Race {
       if (prevS < w.s && r.s >= w.s) {
         const through = w.holes.some((h) => Math.hypot(r.x - h.x, r.y - h.y) < h.r);
         if (!through && r.hyper <= 0) {
-          r.slow = 1.25;
-          r.vs *= 0.5;
+          const resist = (r.mods || NO_MODS).resist;
+          r.slow = 1.25 * resist;
+          r.vs *= 1 - 0.5 * resist;
           this.hooks.onMucus?.(r, w);
         } else this.hooks.onHole?.(r, w);
       }
@@ -376,12 +380,12 @@ export class Race {
       if (o.kind === 'virus') {
         o.alive = false;
         o.cooldown = 16;
-        r.infected = 3.2;
+        r.infected = 3.2 * (r.mods || NO_MODS).immune;
         this.hooks.onVirus?.(r, o);
       } else {
         const lat = Math.hypot(dx, dy) || 1;
         r.vx += (dx / lat) * 11; r.vy += (dy / lat) * 11;
-        r.vs *= 0.62;
+        r.vs *= 1 - 0.38 * (r.mods || NO_MODS).resist;
         o.cooldown = 1;
         this.hooks.onBump?.(r, o);
       }
@@ -518,7 +522,7 @@ export class Race {
         if (best < h.r + RACER_RADIUS * 0.7) {
           h.hold = prey;
           prey.eatenBy = h;
-          prey.eatenT = 1.7;
+          prey.eatenT = 1.7 * (prey.mods || NO_MODS).immune;
           this.hooks.onEaten?.(prey, h);
         }
       } else {

@@ -22,6 +22,16 @@ Each zone has its own hazard:
 
 Swimming right behind a rival gives you extra speed, and the rare hyperactivation crystal lets you smash through obstacles.
 
+## Laboratory: DNA, upgrades, skins and achievements
+
+Every finished race earns **DNA**: more for a better place, for collected fructose and for a win, multiplied by the difficulty (×0.8 easy, ×1 normal, ×1.4 hard). Spend it in the **Laboratory** from the main menu.
+
+- **Upgrades** (5 levels each): Mitochondria (+1.5% top speed per level), ATP reserve (cheaper bursts, faster refill), Flagellum (sharper steering), Acrosome (mucus and blood cells slow you less) and Immune shield (shorter white blood cell holds and virus slowdowns).
+- **Skins**: 13 looks with patterns drawn by the swimmer's shader (stripes, gradients, pulsing bands, a star field, a rainbow, metallic gold). Seven can be bought; six are rewards for achievements. In online races everyone sees each other's skin.
+- **Achievements**: 18, each with a DNA reward, from finishing a first race to winning on Hard in under 65 seconds.
+
+Progress is saved in the browser's local storage, so it stays on one device and browser. Upgrades apply to your own swimmer in online races too. Test runs with `?autopilot=1` earn nothing.
+
 ## Multiplayer
 
 Choose **Play online**, create a room and send the invite link or the 5-character code to friends. Up to 8 players race together, with 0, 5 or 11 bots.
@@ -55,6 +65,7 @@ Then open http://localhost:8123. The models are embedded in `dist/game.js`, so `
 - `npm run build` builds `dist/` from `src/` and `public/models/` (the models go into the bundle).
 - `npm run models` converts the downloaded models in `assets/raw/` into `public/models/`.
 - `npm run sim` runs races without a browser and prints the balance of each difficulty level.
+- `npm run check` checks that all 7 languages have every text the game uses.
 - `npm run deploy` builds the game and publishes it to GitHub Pages, together with the singleplayer branch at `/singleplayer/`.
 - Adding `?autopilot=1` to the URL hands control to a bot. Records are not saved in that mode.
 
